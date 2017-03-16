@@ -15,5 +15,6 @@
 	</bean>
 	
 	<import resource="classpath:configuration/spring.mongo.xml"/>
+	<import resource="classpath:configuration/spring.web.xml"/>
 
 </beans>

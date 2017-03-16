@@ -11,11 +11,13 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Data
 public class BaseMongoEntity implements Serializable {
 	private static final long serialVersionUID = 7035851559619057861L;
 
