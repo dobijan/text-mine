@@ -2,6 +2,8 @@ package hu.bme.mit.textmine.mongo.document.model;
 
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
@@ -19,13 +21,18 @@ public class Document extends BaseMongoEntity {
     private static final long serialVersionUID = -7517719859994825094L;
 
     @DBRef
+    @NotNull(message = "Document corpus must not be null!")
     private Corpus corpus;
     
+    @NotNull(message = "Document title must not be null!")
     private String title;
 
+    @NotNull(message = "Document content must not be null!")
     private String content;
 
+    @NotNull(message = "Document author must not be null!")
     private String author;
 
+    @NotNull(message = "Document sections must not be null!")
     private List<Section> sections;
 }

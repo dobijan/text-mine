@@ -1,5 +1,6 @@
 package hu.bme.mit.textmine.mongo.document.web;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -55,7 +56,7 @@ public class DocumentController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Document> postFile(MultipartHttpServletRequest request) {
+    public ResponseEntity<Document> postFile(MultipartHttpServletRequest request) throws IOException {
         String author = request.getParameter("author");
         String title = request.getParameter("title");
         String corpusId = request.getParameter("corpusId");

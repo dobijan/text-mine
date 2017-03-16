@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.MultipartAutoConfiguration;
 import org.springframework.context.annotation.ImportResource;
 
@@ -17,7 +18,8 @@ import org.springframework.context.annotation.ImportResource;
         HibernateJpaAutoConfiguration.class,
         ManagementWebSecurityAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
-        MultipartAutoConfiguration.class})
+        MultipartAutoConfiguration.class,
+        ValidationAutoConfiguration.class})
 public class TextMineApplication {
 
 	public static void main(String[] args) {
