@@ -1,6 +1,5 @@
 package hu.bme.mit.textmine.mongo.document.web;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -13,19 +12,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import hu.bme.mit.textmine.mongo.document.model.Document;
+import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 
 @RestController
-@RequestMapping(
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        path = "/documents")
+@RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/documents")
 public class DocumentController {
 
     @Autowired
@@ -48,7 +44,7 @@ public class DocumentController {
         }
         return new ResponseEntity<>(document, HttpStatus.OK);
     }
-    
+
     @RequestMapping(method = RequestMethod.GET, path = "/by-corpus/{id}")
     public ResponseEntity<List<Document>> getByCorpus(@PathVariable("id") String id) {
         List<Document> documents = this.service.getDocumentsByCorpus(id);
@@ -57,20 +53,24 @@ public class DocumentController {
         }
         return new ResponseEntity<>(documents, HttpStatus.OK);
     }
-    
-    @RequestMapping(method = RequestMethod.POST, headers = "Content-Type=multipart/form-data")
+
+    @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Document> postFile(MultipartHttpServletRequest request) {
         String author = request.getParameter("author");
         String title = request.getParameter("title");
         String corpusId = request.getParameter("corpusId");
         // TODO corpus
         MultipartFile file = request.getFile("file");
-        if(Stream.of(author, title, corpusId, file).allMatch(Objects::nonNull)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        String ct = file.getContentType();
+        if (Stream.of(author, title, corpusId, file).allMatch(Objects::nonNull)
+                && MediaType.TEXT_PLAIN.toString().equals(ct)) {
+            Document result = this.service.createDocument(
+                    DocumentFileDTO.builder().author(author).corpusId(corpusId).file(file).title(title).build());
+            return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    
+
     @RequestMapping(method = RequestMethod.PUT, path = "/{id}")
     public ResponseEntity<Document> put(@RequestBody Document document, @PathVariable("id") String id) {
         Document oldDocument = this.service.getDocument(id);
@@ -80,7 +80,7 @@ public class DocumentController {
         Document newDocument = this.service.updateDocument(document);
         return new ResponseEntity<>(newDocument, HttpStatus.OK);
     }
-    
+
     @RequestMapping(method = RequestMethod.DELETE, path = "/{id}")
     public ResponseEntity<String> delete(@PathVariable("id") String id) {
         Document document = this.service.getDocument(id);

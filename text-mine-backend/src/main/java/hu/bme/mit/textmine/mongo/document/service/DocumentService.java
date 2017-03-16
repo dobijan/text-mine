@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import hu.bme.mit.textmine.mongo.document.dal.DocumentRepository;
 import hu.bme.mit.textmine.mongo.document.model.Document;
+import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 
 @Service
 public class DocumentService {
@@ -27,9 +28,10 @@ public class DocumentService {
         return this.repository.findByCorpusId(new ObjectId(id));
     }
     
-    public String createDocument (Document document) {
-        Document newDocument = this.repository.insert(document);
-        return newDocument.getId().toString();
+    public Document createDocument (DocumentFileDTO dto) {
+//        Document newDocument = this.repository.insert(document);
+//        return newDocument.getId().toString();
+        return null;
     }
     
     public Document updateDocument (Document document) {
