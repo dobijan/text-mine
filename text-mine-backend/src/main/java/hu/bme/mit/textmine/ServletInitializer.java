@@ -1,4 +1,4 @@
-package hu.bme.mit.text.mine;
+package hu.bme.mit.textmine;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.support.SpringBootServletInitializer;

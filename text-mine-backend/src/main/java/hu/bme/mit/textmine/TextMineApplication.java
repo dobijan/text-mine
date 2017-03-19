@@ -1,4 +1,4 @@
-package hu.bme.mit.text.mine;
+package hu.bme.mit.textmine;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
