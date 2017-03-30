@@ -6,6 +6,8 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import com.querydsl.core.annotations.QueryEntity;
+
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
 import lombok.Builder;
@@ -16,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @org.springframework.data.mongodb.core.mapping.Document(collection = "documents")
+@QueryEntity
 public class Document extends BaseMongoEntity {
 
     private static final long serialVersionUID = -7517719859994825094L;
@@ -35,4 +38,7 @@ public class Document extends BaseMongoEntity {
 
     @NotNull(message = "Document sections must not be null!")
     private List<Section> sections;
+    
+    @NotNull(message = "Document pages must not be null!")
+    private List<Section> pages;
 }

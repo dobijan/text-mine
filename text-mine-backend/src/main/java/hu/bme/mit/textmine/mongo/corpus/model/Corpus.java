@@ -4,6 +4,8 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.querydsl.core.annotations.QueryEntity;
+
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "corpora")
+@QueryEntity
 public class Corpus extends BaseMongoEntity {
 
     private static final long serialVersionUID = -7874690710867901379L;

@@ -5,10 +5,11 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
 import hu.bme.mit.textmine.mongo.document.model.Document;
 
-public interface DocumentRepository extends MongoRepository<Document, String> {
+public interface DocumentRepository extends MongoRepository<Document, String>, QueryDslPredicateExecutor<Document> {
     public List<Document> findAll();
     
     @Query(value = "{ 'corpus.$id' : ?0 }")

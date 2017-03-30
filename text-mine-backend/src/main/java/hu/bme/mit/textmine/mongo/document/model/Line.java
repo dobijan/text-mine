@@ -7,6 +7,6 @@ import lombok.Data;
 @Builder
 public class Line {
 
-    private int   serial;
+    private int    serial;
     private String content;
 }

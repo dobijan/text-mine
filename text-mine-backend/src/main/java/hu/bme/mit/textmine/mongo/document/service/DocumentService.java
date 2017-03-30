@@ -2,15 +2,18 @@ package hu.bme.mit.textmine.mongo.document.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Lists;
 
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
 import hu.bme.mit.textmine.mongo.corpus.service.CorpusService;
@@ -22,6 +25,8 @@ import hu.bme.mit.textmine.mongo.document.model.Section;
 
 @Service
 public class DocumentService {
+    
+    private static Pattern pageNumberPattern = Pattern.compile("\\R(\\d+)\\R");
 
     @Autowired
     private DocumentRepository repository;
@@ -47,18 +52,37 @@ public class DocumentService {
             return null;
         }
         String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
-        String[] pages = content.split("\\R+\\d+\\R+");
-        List<Section> sections = new ArrayList<>();
-        int sectionNumber = 0;
+        // remove chapter marks
+        String preppedForPageDivision = content.replaceAll("\\[\\d+\\.\\]", "");
+        //remove page marks
+        String preppedForSectionDivision = content.replaceAll("\\R\\d+\\R", "");
+        String[] pages = preppedForPageDivision.split("\\R+\\d+\\R+");
+        String[] sections = preppedForSectionDivision.split("\\R+\\[\\d+\\.\\]\\R+");
+        List<Section> sectionCollection = Lists.newArrayList();
+        List<Section> pageCollection = Lists.newArrayList();
+        // find number of first page
+        int pageNumber = 1;
+        Matcher pageNumberMatcher = pageNumberPattern.matcher(content);
+        if (pageNumberMatcher.find()) {
+            pageNumber = Integer.parseInt(pageNumberMatcher.group(1));
+        }
         for (String page : pages) {
-            List<String> lines = Arrays.asList(page.split("\\R"));
+            List<String> lines = Arrays.asList(page.split("\\R+"));
             List<Line> numberedLines = IntStream.rangeClosed(1, lines.size())
                     .mapToObj(idx -> Line.builder().content(lines.get(idx - 1)).serial(idx).build())
                     .collect(Collectors.toList());
-            sections.add(Section.builder().content(page).lines(numberedLines).serial(++sectionNumber).build());
+            pageCollection.add(Section.builder().content(page).lines(numberedLines).serial(pageNumber++).build());
+        }
+        int sectionNumber = 0;
+        for (String section : sections) {
+            List<String> lines = Arrays.asList(section.split("\\R+"));
+            List<Line> numberedLines = IntStream.rangeClosed(1, lines.size())
+                    .mapToObj(idx -> Line.builder().content(lines.get(idx - 1)).serial(idx).build())
+                    .collect(Collectors.toList());
+            sectionCollection.add(Section.builder().content(section).lines(numberedLines).serial(sectionNumber++).build());
         }
         Document document = Document.builder().author(dto.getAuthor()).content(content).corpus(corpus)
-                .title(dto.getTitle()).sections(sections).build();
+                .title(dto.getTitle()).sections(sectionCollection).pages(pageCollection).build();
         return this.repository.insert(document);
     }
 

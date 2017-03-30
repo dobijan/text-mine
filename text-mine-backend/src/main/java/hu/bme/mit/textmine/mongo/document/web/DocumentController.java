@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
+import hu.bme.mit.textmine.mongo.corpus.service.CorpusService;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
@@ -27,6 +29,9 @@ public class DocumentController {
 
     @Autowired
     private DocumentService service;
+    
+    @Autowired
+    private CorpusService corpusService;
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Document>> getAll() {
@@ -60,7 +65,10 @@ public class DocumentController {
         String author = request.getParameter("author");
         String title = request.getParameter("title");
         String corpusId = request.getParameter("corpusId");
-        // TODO corpus
+        Corpus corpus = this.corpusService.getCorpus(corpusId);
+        if (corpus == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         MultipartFile file = request.getFile("file");
         String ct = file.getContentType();
         if (Stream.of(author, title, corpusId, file).allMatch(Objects::nonNull)
