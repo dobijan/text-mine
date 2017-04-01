@@ -8,10 +8,15 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
+import hu.bme.mit.textmine.mongo.dictionary.model.QArticle;
 
 public interface ArticleRepository extends MongoRepository<Article, String>, QueryDslPredicateExecutor<Article> {
     public List<Article> findAll();
     
     @Query(value = "{ 'document.$id' : ?0 }")
     public List<Article> findByDocumentId(ObjectId id);
+    
+    public default boolean exists(String id) {
+        return this.exists(new QArticle("article").id.eq(new ObjectId(id)));
+    }
 }

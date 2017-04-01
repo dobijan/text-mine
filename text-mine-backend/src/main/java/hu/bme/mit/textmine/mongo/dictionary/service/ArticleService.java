@@ -19,11 +19,12 @@ import hu.bme.mit.textmine.mongo.dictionary.model.ArticleFileDTO;
 import hu.bme.mit.textmine.mongo.dictionary.model.EntryExample;
 import hu.bme.mit.textmine.mongo.dictionary.model.FormVariant;
 import hu.bme.mit.textmine.mongo.dictionary.model.Inflection;
-import hu.bme.mit.textmine.mongo.dictionary.model.QArticle;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class ArticleService {
 
     private static final Pattern
@@ -36,7 +37,7 @@ public class ArticleService {
         meaningPattern = Pattern.compile("^.*<J>(.*)</J>.*$"),
         formVariantPattern = Pattern.compile("^.*<Q>(.*)</Q>.*$"),
         inflectionPattern = Pattern.compile("^.*<B>(.*)</B>( – )?(\\d+)?.*$"),
-        occurrencePattern = Pattern.compile("^.*(.*)<I>(.*)</I>(.*) \\(TL (\\d+)\\).*$");
+        occurrencePattern = Pattern.compile("^(.*<I>.*</I>.*) \\(TL (\\d+)\\).*$");
         
     @Autowired
     private ArticleRepository repository;
@@ -45,8 +46,7 @@ public class ArticleService {
     private DocumentService documentService;
     
     public boolean exists(String id) {
-        Long count = this.repository.count(new QArticle("article").id.eq(new ObjectId(id)));
-        return count > 0;
+        return this.repository.exists(id);
     }
     
     public Article getArticle(String id) {
@@ -65,13 +65,45 @@ public class ArticleService {
         return this.repository.findByDocumentId(new ObjectId(id));
     }
     
-    public Article createArticle(ArticleFileDTO dto) throws IOException {
-        Document document = this.documentService.getDocument(dto.getDocumentId());
-        if (document == null) {
+    public List<Article> createMultipleArticles(ArticleFileDTO dto) throws IOException {
+        if (!this.documentService.exists(dto.getDocumentId())) {
+            log.warn("No such document exists!");
             return null;
         }
+        Document document = this.documentService.getDocument(dto.getDocumentId());
         String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
-        List<String> lines = Arrays.asList(content.split("\\R+"));
+        String[] inputSections = content.split("\\n\\n");
+        List<Article> articles = Lists.newArrayList();
+        log.info("Articles found: " + inputSections.length);
+        int idx = 1;
+        for (String section : inputSections) {
+            log.info("Parsing " + idx + ". article.");
+            ++idx;
+            Article article = this.parseToArticle(section, document);
+            if (article != null) {
+                articles.add(article);
+                this.repository.insert(article);                
+            }
+        }
+        return articles;
+    }
+    
+    public Article createArticle(ArticleFileDTO dto) throws IOException {
+        if (!this.documentService.exists(dto.getDocumentId())) {
+            log.warn("No such document exists!");
+            return null;
+        }
+        Document document = this.documentService.getDocument(dto.getDocumentId());
+        String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
+        Article article = this.parseToArticle(content, document);
+        if (article == null) {
+            return null;
+        }
+        return this.repository.insert(article);
+    }
+    
+    private Article parseToArticle (String input, Document document) {
+        List<String> lines = Arrays.asList(input.split("\\R+"));
         Article article = new Article();
         article.setDocument(document);
         article.setProperNoun(false);
@@ -87,6 +119,7 @@ public class ArticleService {
             // find article entry word
             Matcher m = entryWordPattern.matcher(line);
             if (m.matches()) {
+                log.info("Constructing article for: " + m.group(1));
                 article.setEntryWord(m.group(1));
                 continue;
             }
@@ -147,18 +180,36 @@ public class ArticleService {
                 }
                 inflection.setExamples(Lists.newArrayList());
                 currentInflection = inflection;
+                if (currentFormVariant == null) {
+                    FormVariant formVariant = new FormVariant();
+                    formVariant.setName(m.group(1));
+                    formVariant.setInflections(Lists.newArrayList());
+                    article.getFormVariants().add(formVariant);
+                    currentFormVariant = formVariant; 
+                }
                 currentFormVariant.getInflections().add(inflection);
             }
             // find an occurrence
             m = occurrencePattern.matcher(line);
             if (m.matches()) {
+                String exampleText = m.group(1).replace("<I>", "").replace("</I>", "");
                 EntryExample example = new EntryExample();
-                example.setExampleSentence(m.group(1) + m.group(2) + m.group(3));
-                example.setPage(Integer.parseInt(m.group(4)));
+                example.setExampleSentence(exampleText);
+                example.setPage(Integer.parseInt(m.group(2)));
+                if (currentInflection == null) {
+                    Inflection inflection = new Inflection();
+                    inflection.setName(m.group(1));
+                    inflection.setExamples(Lists.newArrayList());
+                    currentInflection = inflection;
+                    currentFormVariant.getInflections().add(inflection);
+                }
                 currentInflection.getExamples().add(example);
             }
         }
-        return this.repository.insert(article);
+        if (article.getEntryWord() == null) {
+            return null;
+        }
+        return article;
     }
     
     public Article updateArticle(Article article) {

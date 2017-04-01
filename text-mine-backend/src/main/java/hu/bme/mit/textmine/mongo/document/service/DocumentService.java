@@ -33,6 +33,10 @@ public class DocumentService {
 
     @Autowired
     private CorpusService corpusService;
+    
+    public boolean exists(String id) {
+        return this.repository.exists(id);
+    }
 
     public List<Document> getAllDocuments() {
         return this.repository.findAll();
