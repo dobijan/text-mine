@@ -11,7 +11,7 @@
 	<mongo:mongo id="mongo" host="${mongo.host}" port="${mongo.port}" />
 
 	<mongo:db-factory id="mongoDbFactory" dbname="${mongo.database}"
-		mongo-ref="mongo" />
+		mongo-ref="mongo" write-concern="ACKNOWLEDGED" />
 
 	<!-- Biggest fucking GOTCHA ever. Try giving this a different id... https://jira.spring.io/si/jira.issueviews:issue-html/DATAMONGO-1212/DATAMONGO-1212.html -->
 	<mongo:mapping-converter id="mappingConverter"

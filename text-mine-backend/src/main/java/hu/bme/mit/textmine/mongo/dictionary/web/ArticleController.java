@@ -18,8 +18,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
 import hu.bme.mit.textmine.mongo.dictionary.model.ArticleDTO;
 import hu.bme.mit.textmine.mongo.dictionary.model.ArticleFileDTO;
+import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.dictionary.service.ArticleService;
-import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 
 @RestController
@@ -84,6 +84,17 @@ public class ArticleController {
         return new ResponseEntity<>(ArticleDTO.from(this.articleService.createMultipleArticles(dto)),
                 HttpStatus.CREATED);
     }
+    
+    @SuppressWarnings("unchecked")
+    @RequestMapping(method = RequestMethod.POST, path = "/pos")
+    public ResponseEntity<List<PartOfSpeechCsvBean>> postPartsOfSpeech(MultipartHttpServletRequest request) throws IOException {
+        ArticleFileDTO dto = new ArticleFileDTO();
+        ResponseEntity<List<PartOfSpeechCsvBean>> check = this.checkFileBasedPost(request, dto);
+        if (check != null) {
+            return check;
+        }
+        return new ResponseEntity<>(this.articleService.attachPOSInfo(dto), HttpStatus.ACCEPTED);
+    }
 
     @SuppressWarnings("rawtypes")
     private ResponseEntity checkFileBasedPost(MultipartHttpServletRequest request, ArticleFileDTO dto) {
@@ -92,15 +103,15 @@ public class ArticleController {
         if (documentId == null || file == null) {
             return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         }
-        Document document = this.documentService.getDocument(documentId);
-        if (document == null) {
+//        Document document = this.documentService.getDocument(documentId);
+        if (!this.documentService.exists(documentId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        if (!MediaType.TEXT_PLAIN.toString().equals(file.getContentType())
-                && !MediaType.APPLICATION_XML.toString().equals(file.getContentType())
-                && !MediaType.TEXT_XML.toString().equals(file.getContentType())) {
-            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-        }
+//        if (!MediaType.TEXT_PLAIN.toString().equals(file.getContentType())
+//                && !MediaType.APPLICATION_XML.toString().equals(file.getContentType())
+//                && !MediaType.TEXT_XML.toString().equals(file.getContentType())) {
+//            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+//        }
         dto.setFile(file);
         dto.setDocumentId(documentId);
         return null;

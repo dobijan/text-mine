@@ -33,6 +33,8 @@ public class ArticleDTO extends BaseMongoEntityDTO {
     private String editorNote;
     
     private String meaning;
+    
+    private PartOfSpeech partOfSpeech;
 
     private List<String> externalReferences;
     

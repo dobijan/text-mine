@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import com.querydsl.core.annotations.QueryEntity;
@@ -32,6 +33,7 @@ public class Article extends BaseMongoEntity {
     private Document document;
 
     @NotNull(message = "Article entry word must not be null!")
+    @Indexed
     private String entryWord;
 
     @NotNull(message = "Article proper noun flag must not be null!")
@@ -43,6 +45,8 @@ public class Article extends BaseMongoEntity {
     private String editorNote;
     
     private String meaning;
+    
+    private PartOfSpeech partOfSpeech;
 
     private List<String> externalReferences;
     

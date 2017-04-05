@@ -1,6 +1,7 @@
 package hu.bme.mit.textmine.mongo.dictionary.service;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -13,12 +14,16 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
 
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
+import au.com.bytecode.opencsv.bean.CsvToBean;
 import hu.bme.mit.textmine.mongo.dictionary.dal.ArticleRepository;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
 import hu.bme.mit.textmine.mongo.dictionary.model.ArticleFileDTO;
 import hu.bme.mit.textmine.mongo.dictionary.model.EntryExample;
 import hu.bme.mit.textmine.mongo.dictionary.model.FormVariant;
 import hu.bme.mit.textmine.mongo.dictionary.model.Inflection;
+import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,36 +32,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ArticleService {
 
-    private static final Pattern
-        entryWordPattern = Pattern.compile("^.*<U>(.*)</U>.*$"),
-        internalReferencPattern = Pattern.compile("^.*<R>(.*)</R>.*$"),
-        externalReferencPattern = Pattern.compile("^.*<RT>(.*)</RT>.*$"),
-        properNounPattern = Pattern.compile("^.*<T_/>.*$"),
-        derivativePattern = Pattern.compile("^.*<KT_/>.*$"),
-        editorNotePattern = Pattern.compile("^.*<K>(.*)</K>.*$"),
-        meaningPattern = Pattern.compile("^.*<J>(.*)</J>.*$"),
-        formVariantPattern = Pattern.compile("^.*<Q>(.*)</Q>.*$"),
-        inflectionPattern = Pattern.compile("^.*<B>(.*)</B>( – )?(\\d+)?.*$"),
-        occurrencePattern = Pattern.compile("^(.*<I>.*</I>.*) \\(TL (\\d+)\\).*$");
-        
+    private static final Pattern entryWordPattern = Pattern.compile("^.*<U>(.*)</U>.*$"),
+            internalReferencPattern = Pattern.compile("^.*<R>(.*)</R>.*$"),
+            externalReferencPattern = Pattern.compile("^.*<RT>(.*)</RT>.*$"),
+            properNounPattern = Pattern.compile("^.*<T_/>.*$"), derivativePattern = Pattern.compile("^.*<KT_/>.*$"),
+            editorNotePattern = Pattern.compile("^.*<K>(.*)</K>.*$"),
+            meaningPattern = Pattern.compile("^.*<J>(.*)</J>.*$"),
+            formVariantPattern = Pattern.compile("^.*<Q>(.*)</Q>.*$"),
+            inflectionPattern = Pattern.compile("^.*<B>(.*)</B>( – )?(\\d+)?.*$"),
+            occurrencePattern = Pattern.compile("^(.*<I>.*</I>.*) \\(TL (\\d+)\\).*$");
+
     @Autowired
     private ArticleRepository repository;
-    
+
     @Autowired
     private DocumentService documentService;
-    
+
     public boolean exists(String id) {
         return this.repository.exists(id);
     }
-    
+
     public Article getArticle(String id) {
         return this.repository.findOne(id);
     }
-    
+
     public List<Article> getAll() {
         return this.repository.findAll();
     }
-    
+
     public List<Article> getArticlesByDocument(String id) {
         Document document = this.documentService.getDocument(id);
         if (document == null) {
@@ -64,7 +67,23 @@ public class ArticleService {
         }
         return this.repository.findByDocumentId(new ObjectId(id));
     }
-    
+
+    public List<PartOfSpeechCsvBean> attachPOSInfo(ArticleFileDTO dto) throws IOException {
+        if (!this.documentService.exists(dto.getDocumentId())) {
+            log.warn("No such document exists!");
+            return null;
+        }
+        String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
+        List<PartOfSpeechCsvBean> posTags = this.parseCsvToPos(content);
+        for (PartOfSpeechCsvBean posTag : posTags) {
+//            Article article = this.repository.findByEntryWord(posTag.getWord());
+            if (!this.repository.updatePOS(posTag.getWord().trim(), posTag.getPartOfSpeechMapped())) {
+                log.error("Could not find article for: " + posTag.getWord().trim());
+            }
+        }
+        return posTags;
+    }
+
     public List<Article> createMultipleArticles(ArticleFileDTO dto) throws IOException {
         if (!this.documentService.exists(dto.getDocumentId())) {
             log.warn("No such document exists!");
@@ -82,12 +101,12 @@ public class ArticleService {
             Article article = this.parseToArticle(section, document);
             if (article != null) {
                 articles.add(article);
-                this.repository.insert(article);                
+                this.repository.insert(article);
             }
         }
         return articles;
     }
-    
+
     public Article createArticle(ArticleFileDTO dto) throws IOException {
         if (!this.documentService.exists(dto.getDocumentId())) {
             log.warn("No such document exists!");
@@ -101,8 +120,18 @@ public class ArticleService {
         }
         return this.repository.insert(article);
     }
-    
-    private Article parseToArticle (String input, Document document) {
+
+    private List<PartOfSpeechCsvBean> parseCsvToPos(String content) {
+        CsvToBean<PartOfSpeechCsvBean> processor = new CsvToBean<>();
+        ColumnPositionMappingStrategy<PartOfSpeechCsvBean> mappingStrategy = new ColumnPositionMappingStrategy<>();
+        mappingStrategy.setColumnMapping(new String[]{"word", "partOfSpeech"});
+        mappingStrategy.setType(PartOfSpeechCsvBean.class);
+        List<PartOfSpeechCsvBean> beans = processor.parse(mappingStrategy,
+                new CSVReader(new StringReader(content), ';'));
+        return beans;
+    }
+
+    private Article parseToArticle(String input, Document document) {
         List<String> lines = Arrays.asList(input.split("\\R+"));
         Article article = new Article();
         article.setDocument(document);
@@ -111,10 +140,10 @@ public class ArticleService {
         article.setInternalReferences(Lists.newArrayList());
         article.setExternalReferences(Lists.newArrayList());
         article.setFormVariants(Lists.newArrayList());
-        
+
         FormVariant currentFormVariant = null;
         Inflection currentInflection = null;
-        
+
         for (String line : lines) {
             // find article entry word
             Matcher m = entryWordPattern.matcher(line);
@@ -175,7 +204,7 @@ public class ArticleService {
                 Inflection inflection = new Inflection();
                 inflection.setName(m.group(1));
                 String occurrences = m.group(3);
-                if (occurrences != null) {                    
+                if (occurrences != null) {
                     inflection.setOccurrences(Integer.parseInt(occurrences));
                 }
                 inflection.setExamples(Lists.newArrayList());
@@ -185,7 +214,7 @@ public class ArticleService {
                     formVariant.setName(m.group(1));
                     formVariant.setInflections(Lists.newArrayList());
                     article.getFormVariants().add(formVariant);
-                    currentFormVariant = formVariant; 
+                    currentFormVariant = formVariant;
                 }
                 currentFormVariant.getInflections().add(inflection);
             }
@@ -211,16 +240,16 @@ public class ArticleService {
         }
         return article;
     }
-    
+
     public Article updateArticle(Article article) {
         this.repository.save(article);
         return article;
     }
-    
+
     public void removeArticle(String id) {
         this.repository.delete(id);
     }
-    
+
     public void removeArticles(List<Article> articles) {
         this.repository.delete(articles);
     }

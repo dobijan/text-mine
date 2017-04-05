@@ -9,7 +9,11 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.MultipartAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.data.mongodb.core.WriteConcernResolver;
+
+import com.mongodb.WriteConcern;
 
 @SpringBootApplication
 @ImportResource({"classpath*:configuration/spring.application.context.xml"})
