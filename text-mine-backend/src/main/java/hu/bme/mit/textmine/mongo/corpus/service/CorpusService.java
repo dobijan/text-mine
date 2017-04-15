@@ -9,12 +9,16 @@ import org.springframework.stereotype.Service;
 
 import hu.bme.mit.textmine.mongo.corpus.dal.CorpusRepository;
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
+import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
 
 @Service
 public class CorpusService {
 
     @Autowired
     private CorpusRepository repository;
+    
+    @Autowired
+    private TextMineVocabularyService vocabulary;
 
     public List<Corpus> getAllCorpora() {
         return this.repository.findAll();
@@ -26,6 +30,7 @@ public class CorpusService {
 
     public Corpus createCorpus(Corpus corpus) {
         if (Stream.of(corpus.getDescription(), corpus.getTitle()).allMatch(Objects::nonNull)) {
+            corpus.setIri(this.vocabulary.asResource(corpus));
             return this.repository.insert(corpus);
         }
         return null;

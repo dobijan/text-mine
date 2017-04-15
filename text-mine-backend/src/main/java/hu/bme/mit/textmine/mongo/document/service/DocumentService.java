@@ -22,6 +22,7 @@ import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 import hu.bme.mit.textmine.mongo.document.model.Line;
 import hu.bme.mit.textmine.mongo.document.model.Section;
+import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
 
 @Service
 public class DocumentService {
@@ -30,6 +31,9 @@ public class DocumentService {
 
     @Autowired
     private DocumentRepository repository;
+    
+    @Autowired
+    private TextMineVocabularyService vocabulary;
 
     @Autowired
     private CorpusService corpusService;
@@ -87,6 +91,7 @@ public class DocumentService {
         }
         Document document = Document.builder().author(dto.getAuthor()).content(content).corpus(corpus)
                 .title(dto.getTitle()).sections(sectionCollection).pages(pageCollection).build();
+        document.setIri(this.vocabulary.asResource(document));
         return this.repository.insert(document);
     }
 

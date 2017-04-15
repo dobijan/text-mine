@@ -26,6 +26,7 @@ import hu.bme.mit.textmine.mongo.dictionary.model.Inflection;
 import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
+import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -47,6 +48,9 @@ public class ArticleService {
 
     @Autowired
     private DocumentService documentService;
+    
+    @Autowired
+    private TextMineVocabularyService vocabulary;
 
     public boolean exists(String id) {
         return this.repository.exists(id);
@@ -238,6 +242,7 @@ public class ArticleService {
         if (article.getEntryWord() == null) {
             return null;
         }
+        article.setIri(this.vocabulary.asResource(article));
         return article;
     }
 
