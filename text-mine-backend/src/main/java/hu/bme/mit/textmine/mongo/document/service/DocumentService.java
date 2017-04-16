@@ -22,22 +22,22 @@ import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 import hu.bme.mit.textmine.mongo.document.model.Line;
 import hu.bme.mit.textmine.mongo.document.model.Section;
-import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
+import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 
 @Service
 public class DocumentService {
-    
+
     private static Pattern pageNumberPattern = Pattern.compile("\\R(\\d+)\\R");
 
     @Autowired
     private DocumentRepository repository;
-    
+
     @Autowired
     private TextMineVocabularyService vocabulary;
 
     @Autowired
     private CorpusService corpusService;
-    
+
     public boolean exists(String id) {
         return this.repository.exists(id);
     }
@@ -54,6 +54,14 @@ public class DocumentService {
         return this.repository.findByCorpusId(new ObjectId(id));
     }
 
+    public List<Document> getDocumentsByTitle(String title) {
+        return this.repository.findByTitle(title);
+    }
+
+    public List<Document> languageAgnosticFullTextQuery(String word) {
+        return this.repository.languageAgnosticQuery(word);
+    }
+
     public Document createDocument(DocumentFileDTO dto) throws IOException {
         Corpus corpus = this.corpusService.getCorpus(dto.getCorpusId());
         if (corpus == null) {
@@ -62,7 +70,7 @@ public class DocumentService {
         String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
         // remove chapter marks
         String preppedForPageDivision = content.replaceAll("\\[\\d+\\.\\]", "");
-        //remove page marks
+        // remove page marks
         String preppedForSectionDivision = content.replaceAll("\\R\\d+\\R", "");
         String[] pages = preppedForPageDivision.split("\\R+\\d+\\R+");
         String[] sections = preppedForSectionDivision.split("\\R+\\[\\d+\\.\\]\\R+");
@@ -87,7 +95,8 @@ public class DocumentService {
             List<Line> numberedLines = IntStream.rangeClosed(1, lines.size())
                     .mapToObj(idx -> Line.builder().content(lines.get(idx - 1)).serial(idx).build())
                     .collect(Collectors.toList());
-            sectionCollection.add(Section.builder().content(section).lines(numberedLines).serial(sectionNumber++).build());
+            sectionCollection
+                    .add(Section.builder().content(section).lines(numberedLines).serial(sectionNumber++).build());
         }
         Document document = Document.builder().author(dto.getAuthor()).content(content).corpus(corpus)
                 .title(dto.getTitle()).sections(sectionCollection).pages(pageCollection).build();

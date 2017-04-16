@@ -1,4 +1,4 @@
-package hu.bme.mit.textmine.rdf;
+package hu.bme.mit.textmine.rdf.model;
 
 import java.util.List;
 import java.util.Map;

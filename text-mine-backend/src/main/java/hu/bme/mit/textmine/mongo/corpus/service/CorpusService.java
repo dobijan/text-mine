@@ -9,14 +9,14 @@ import org.springframework.stereotype.Service;
 
 import hu.bme.mit.textmine.mongo.corpus.dal.CorpusRepository;
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
-import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
+import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 
 @Service
 public class CorpusService {
 
     @Autowired
     private CorpusRepository repository;
-    
+
     @Autowired
     private TextMineVocabularyService vocabulary;
 
@@ -26,6 +26,10 @@ public class CorpusService {
 
     public Corpus getCorpus(String id) {
         return this.repository.findOne(id);
+    }
+
+    public List<Corpus> languageAgnosticFullTextQuery(String word) {
+        return this.repository.languageAgnosticQuery(word);
     }
 
     public Corpus createCorpus(Corpus corpus) {
@@ -45,7 +49,7 @@ public class CorpusService {
         }
         return null;
     }
-    
+
     public void removeCorpus(Corpus corpus) {
         this.repository.delete(corpus);
     }

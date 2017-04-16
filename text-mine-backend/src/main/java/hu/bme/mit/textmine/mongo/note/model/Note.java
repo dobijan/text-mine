@@ -8,8 +8,12 @@ import javax.validation.constraints.NotNull;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Language;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.hash.Hashing;
 import com.querydsl.core.annotations.QueryEntity;
 
@@ -28,7 +32,8 @@ import lombok.EqualsAndHashCode;
         @CompoundIndex(name = "doc", def = "{'document.$id' : 1}"),
         @CompoundIndex(name = "doc_section", def = "{'document.$id' : 1, 'section' : 1}"),
         @CompoundIndex(name = "doc_type", def = "{'document.$id' : 1, 'type' : 1}"),
-        @CompoundIndex(name = "doc_type_subtype", def = "{'document.$id' : 1, 'type' : 1, 'subType' : 1}")
+        @CompoundIndex(name = "doc_type_subtype", def = "{'document.$id' : 1, 'type' : 1, 'subType' : 1}"),
+        @CompoundIndex(name = "doc_quote", def = "{'document.$id' : 1, 'quote' : 1}")
 })
 public class Note extends BaseMongoEntity {
 
@@ -46,6 +51,8 @@ public class Note extends BaseMongoEntity {
     @NotNull(message = "Annotation must have a subtype!")
     private String subType;
 
+    @Indexed
+    @TextIndexed(weight = 2)
     @NotNull(message = "Annotation must have a quote!")
     private String quote;
 
@@ -55,8 +62,17 @@ public class Note extends BaseMongoEntity {
     @NotNull(message = "Annotation must have a section reference!")
     private Integer section;
 
+    @TextIndexed
     @NotNull(message = "Annotation must have content!")
     private String content;
+
+    @TextScore
+    @JsonIgnore
+    private Double score;
+
+    @Language
+    @JsonIgnore
+    private final String language = "none";
 
     @Override
     public String getHash() {

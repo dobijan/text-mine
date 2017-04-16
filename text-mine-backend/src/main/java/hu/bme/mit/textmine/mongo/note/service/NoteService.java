@@ -31,7 +31,7 @@ import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 import hu.bme.mit.textmine.mongo.note.dal.NoteRepository;
 import hu.bme.mit.textmine.mongo.note.model.Note;
 import hu.bme.mit.textmine.mongo.note.model.NoteFileDTO;
-import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
+import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.SneakyThrows;
 
 @Service
@@ -78,6 +78,14 @@ public class NoteService {
             return null;
         }
         return this.repository.findByDocumentId(documentId);
+    }
+
+    public List<Note> getNotesByQuote(String quote) {
+        return this.repository.findByQuote(quote);
+    }
+
+    public List<Note> languageAgnosticFullTextQuery(String word) {
+        return this.repository.languageAgnosticQuery(word);
     }
 
     public boolean exists(String id) {

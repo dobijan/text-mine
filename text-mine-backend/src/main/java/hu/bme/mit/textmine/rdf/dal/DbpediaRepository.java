@@ -1,4 +1,4 @@
-package hu.bme.mit.textmine.rdf;
+package hu.bme.mit.textmine.rdf.dal;
 
 import java.util.List;
 
@@ -23,9 +23,9 @@ import com.google.common.collect.Lists;
 @Repository
 public class DbpediaRepository {
 
-    private static final String URL      = "http://dbpedia.org/sparql";
+    private static final String URL = "http://dbpedia.org/sparql";
     private static final String BASE_URI = "http://dbpedia.org/resource/";
-    
+
     public static String getBaseUri() {
         return BASE_URI;
     }
@@ -53,7 +53,9 @@ public class DbpediaRepository {
             try (GraphQueryResult result = graphQuery.evaluate()) {
                 while (result.hasNext()) { // iterate over the result
                     Statement stmt = result.next();
-                    statements.add(stmt);
+                    Statement stmtWithContext = vf.createStatement(stmt.getSubject(), stmt.getPredicate(),
+                            stmt.getObject(), vf.createIRI(BASE_URI));
+                    statements.add(stmtWithContext);
                 }
             }
         }

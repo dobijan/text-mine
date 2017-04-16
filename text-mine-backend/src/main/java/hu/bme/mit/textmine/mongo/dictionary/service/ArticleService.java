@@ -26,7 +26,7 @@ import hu.bme.mit.textmine.mongo.dictionary.model.Inflection;
 import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
-import hu.bme.mit.textmine.rdf.TextMineVocabularyService;
+import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -48,7 +48,7 @@ public class ArticleService {
 
     @Autowired
     private DocumentService documentService;
-    
+
     @Autowired
     private TextMineVocabularyService vocabulary;
 
@@ -72,6 +72,14 @@ public class ArticleService {
         return this.repository.findByDocumentId(new ObjectId(id));
     }
 
+    public List<Article> getArticlesByEntryWord(String entryWord) {
+        return this.repository.findByEntryWord(entryWord);
+    }
+
+    public List<Article> languageAgnosticFullTextQuery(String word) {
+        return this.repository.languageAgnosticQuery(word);
+    }
+
     public List<PartOfSpeechCsvBean> attachPOSInfo(ArticleFileDTO dto) throws IOException {
         if (!this.documentService.exists(dto.getDocumentId())) {
             log.warn("No such document exists!");
@@ -80,7 +88,8 @@ public class ArticleService {
         String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
         List<PartOfSpeechCsvBean> posTags = this.parseCsvToPos(content);
         for (PartOfSpeechCsvBean posTag : posTags) {
-//            Article article = this.repository.findByEntryWord(posTag.getWord());
+            // Article article =
+            // this.repository.findByEntryWord(posTag.getWord());
             if (!this.repository.updatePOS(posTag.getWord().trim(), posTag.getPartOfSpeechMapped())) {
                 log.error("Could not find article for: " + posTag.getWord().trim());
             }
@@ -128,7 +137,9 @@ public class ArticleService {
     private List<PartOfSpeechCsvBean> parseCsvToPos(String content) {
         CsvToBean<PartOfSpeechCsvBean> processor = new CsvToBean<>();
         ColumnPositionMappingStrategy<PartOfSpeechCsvBean> mappingStrategy = new ColumnPositionMappingStrategy<>();
-        mappingStrategy.setColumnMapping(new String[]{"word", "partOfSpeech"});
+        mappingStrategy.setColumnMapping(new String[] {
+                "word", "partOfSpeech"
+        });
         mappingStrategy.setType(PartOfSpeechCsvBean.class);
         List<PartOfSpeechCsvBean> beans = processor.parse(mappingStrategy,
                 new CSVReader(new StringReader(content), ';'));

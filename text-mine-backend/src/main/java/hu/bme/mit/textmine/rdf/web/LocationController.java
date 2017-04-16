@@ -1,4 +1,4 @@
-package hu.bme.mit.textmine.rdf;
+package hu.bme.mit.textmine.rdf.web;
 
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.repository.RepositoryException;
@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import hu.bme.mit.textmine.rdf.model.RdfStatementsDTO;
+import hu.bme.mit.textmine.rdf.service.LocationService;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/locations")

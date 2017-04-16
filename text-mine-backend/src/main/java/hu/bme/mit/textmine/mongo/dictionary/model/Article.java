@@ -8,8 +8,12 @@ import javax.validation.constraints.NotNull;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Language;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.hash.Hashing;
 import com.querydsl.core.annotations.QueryEntity;
 
@@ -43,8 +47,9 @@ public class Article extends BaseMongoEntity {
     @NotNull(message = "Article must be linked to a document!")
     private Document document;
 
-    @NotNull(message = "Article entry word must not be null!")
     @Indexed
+    @TextIndexed(weight = 10)
+    @NotNull(message = "Article entry word must not be null!")
     private String entryWord;
 
     @Indexed
@@ -55,8 +60,10 @@ public class Article extends BaseMongoEntity {
     @NotNull(message = "Article derivative flag must not be null!")
     private Boolean derivative;
 
+    @TextIndexed
     private String editorNote;
 
+    @TextIndexed
     private String meaning;
 
     @Indexed
@@ -67,6 +74,14 @@ public class Article extends BaseMongoEntity {
     private List<String> internalReferences;
 
     private List<FormVariant> formVariants;
+
+    @TextScore
+    @JsonIgnore
+    private Double score;
+
+    @Language
+    @JsonIgnore
+    private final String language = "none";
 
     @Override
     public String getHash() {

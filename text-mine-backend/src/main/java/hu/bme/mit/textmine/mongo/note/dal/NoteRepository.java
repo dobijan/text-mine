@@ -3,6 +3,9 @@ package hu.bme.mit.textmine.mongo.note.dal;
 import java.util.List;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
@@ -22,5 +25,16 @@ public interface NoteRepository
         List<Note> result = Lists.newArrayList();
         this.findAll(new QNote("note").document.id.eq(new ObjectId(id))).forEach(result::add);
         return result;
+    }
+
+    public List<Note> findByQuote(String quote);
+
+    public Page<Note> findBy(TextCriteria criteria, Pageable page);
+
+    public List<Note> findAllByOrderByScoreDesc(TextCriteria criteria);
+
+    public default List<Note> languageAgnosticQuery(String word) {
+        return this.findAllByOrderByScoreDesc(
+                TextCriteria.forLanguage("none").caseSensitive(false).diacriticSensitive(false).matching(word));
     }
 }

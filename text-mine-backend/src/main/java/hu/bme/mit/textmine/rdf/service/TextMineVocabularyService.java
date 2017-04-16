@@ -1,4 +1,4 @@
-package hu.bme.mit.textmine.rdf;
+package hu.bme.mit.textmine.rdf.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -7,10 +7,12 @@ import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.note.model.Note;
+import lombok.Getter;
 
 @Service
 public class TextMineVocabularyService {
 
+    @Getter
     @Value("${vocabulary.base.iri}")
     private String baseIri;
 
@@ -40,6 +42,22 @@ public class TextMineVocabularyService {
 
     @Value("${vocabulary.person.relation.postfix}")
     private String temporalRelationPostfix;
+
+    public String document() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.documentResourcePostfix);
+    }
+
+    public String article() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.articleResourcePostfix);
+    }
+
+    public String note() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.noteResourcePostfix);
+    }
+
+    public String corpus() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.corpusResourcePostfix);
+    }
 
     public String asResource(Document document) {
         return String.join("/", this.baseIri, this.baseResourcePostfix, this.documentResourcePostfix,

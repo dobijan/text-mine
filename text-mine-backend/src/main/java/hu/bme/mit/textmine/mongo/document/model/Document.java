@@ -8,8 +8,12 @@ import javax.validation.constraints.NotNull;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Language;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.hash.Hashing;
 import com.querydsl.core.annotations.QueryEntity;
 
@@ -38,13 +42,17 @@ public class Document extends BaseMongoEntity {
     @NotNull(message = "Document corpus must not be null!")
     private Corpus corpus;
 
+    @Indexed
+    @TextIndexed(weight = 2)
     @NotNull(message = "Document title must not be null!")
     private String title;
 
+    @TextIndexed
     @NotNull(message = "Document content must not be null!")
     private String content;
 
     @Indexed
+    @TextIndexed(weight = 2)
     @NotNull(message = "Document author must not be null!")
     private String author;
 
@@ -53,6 +61,14 @@ public class Document extends BaseMongoEntity {
 
     @NotNull(message = "Document pages must not be null!")
     private List<Section> pages;
+
+    @TextScore
+    @JsonIgnore
+    private Double score;
+
+    @Language
+    @JsonIgnore
+    private final String language = "none";
 
     @Override
     public String getHash() {
