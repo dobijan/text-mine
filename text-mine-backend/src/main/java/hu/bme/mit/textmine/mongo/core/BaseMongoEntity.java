@@ -3,8 +3,6 @@ package hu.bme.mit.textmine.mongo.core;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.validation.constraints.NotNull;
-
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -14,35 +12,33 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Data
-public abstract class BaseMongoEntity implements Serializable {
-	private static final long serialVersionUID = 7035851559619057861L;
+@EqualsAndHashCode(callSuper = true)
+public abstract class BaseMongoEntity extends RdfEntity implements Serializable {
 
-	@Id
-	protected ObjectId id;
+    private static final long serialVersionUID = 7035851559619057861L;
 
-	@Version
-	protected Long version;
+    @Id
+    protected ObjectId id;
 
-	@CreatedDate
-	protected Date createdDate;
+    @Version
+    protected Long version;
 
-	@LastModifiedDate
-	protected Date lastModifiedDate;
+    @CreatedDate
+    protected Date createdDate;
 
-	@CreatedBy
-	protected String createdBy;
+    @LastModifiedDate
+    protected Date lastModifiedDate;
 
-	@LastModifiedBy
-	protected String lastModifiedBy;
-	
-	@NotNull(message = "IRI must not be null!")
-	protected String iri;
-	
-	protected abstract String getHash();
+    @CreatedBy
+    protected String createdBy;
+
+    @LastModifiedBy
+    protected String lastModifiedBy;
 }

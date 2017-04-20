@@ -84,19 +84,27 @@ public class DocumentService {
         }
         for (String page : pages) {
             List<String> lines = Arrays.asList(page.split("\\R+"));
-            List<Line> numberedLines = IntStream.rangeClosed(1, lines.size())
-                    .mapToObj(idx -> Line.builder().content(lines.get(idx - 1)).serial(idx).build())
-                    .collect(Collectors.toList());
-            pageCollection.add(Section.builder().content(page).lines(numberedLines).serial(pageNumber++).build());
+            List<Line> numberedLines = IntStream.rangeClosed(1, lines.size()).mapToObj(idx -> {
+                Line line = Line.builder().content(lines.get(idx - 1)).serial(idx).build();
+                line.setIri(this.vocabulary.asResource(line));
+                return line;
+            }).collect(Collectors.toList());
+            Section pageSection = Section.builder().content(page).lines(numberedLines).serial(pageNumber++).build();
+            pageSection.setIri(this.vocabulary.asResource(pageSection));
+            pageCollection.add(pageSection);
         }
         int sectionNumber = 0;
         for (String section : sections) {
             List<String> lines = Arrays.asList(section.split("\\R+"));
-            List<Line> numberedLines = IntStream.rangeClosed(1, lines.size())
-                    .mapToObj(idx -> Line.builder().content(lines.get(idx - 1)).serial(idx).build())
-                    .collect(Collectors.toList());
-            sectionCollection
-                    .add(Section.builder().content(section).lines(numberedLines).serial(sectionNumber++).build());
+            List<Line> numberedLines = IntStream.rangeClosed(1, lines.size()).mapToObj(idx -> {
+                Line line = Line.builder().content(lines.get(idx - 1)).serial(idx).build();
+                line.setIri(this.vocabulary.asResource(line));
+                return line;
+            }).collect(Collectors.toList());
+            Section sectionObj = Section.builder().content(section).lines(numberedLines).serial(sectionNumber++)
+                    .build();
+            sectionObj.setIri(this.vocabulary.asResource(sectionObj));
+            sectionCollection.add(sectionObj);
         }
         Document document = Document.builder().author(dto.getAuthor()).content(content).corpus(corpus)
                 .title(dto.getTitle()).sections(sectionCollection).pages(pageCollection).build();

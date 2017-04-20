@@ -13,7 +13,8 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.QDocument;
 
-public interface DocumentRepository extends MongoRepository<Document, String>, QueryDslPredicateExecutor<Document> {
+public interface DocumentRepository
+        extends CustomDocumentRepository, MongoRepository<Document, String>, QueryDslPredicateExecutor<Document> {
 
     public List<Document> findAll();
 

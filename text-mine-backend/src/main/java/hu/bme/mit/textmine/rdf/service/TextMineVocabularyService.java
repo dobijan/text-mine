@@ -3,10 +3,7 @@ package hu.bme.mit.textmine.rdf.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
-import hu.bme.mit.textmine.mongo.dictionary.model.Article;
-import hu.bme.mit.textmine.mongo.document.model.Document;
-import hu.bme.mit.textmine.mongo.note.model.Note;
+import hu.bme.mit.textmine.mongo.core.RdfEntity;
 import lombok.Getter;
 
 @Service
@@ -19,15 +16,27 @@ public class TextMineVocabularyService {
     @Value("${vocabulary.base.resource.postfix}")
     private String baseResourcePostfix;
 
+    @Getter
     @Value("${vocabulary.corpus.resource.postfix}")
     private String corpusResourcePostfix;
 
+    @Getter
     @Value("${vocabulary.article.resource.postfix}")
     private String articleResourcePostfix;
 
+    @Getter
     @Value("${vocabulary.document.resource.postfix}")
     private String documentResourcePostfix;
 
+    @Getter
+    @Value("${vocabulary.section.resource.postfix}")
+    private String sectionResourcePostfix;
+
+    @Getter
+    @Value("${vocabulary.line.resource.postfix}")
+    private String lineResourcePostfix;
+
+    @Getter
     @Value("${vocabulary.note.resource.postfix}")
     private String noteResourcePostfix;
 
@@ -59,21 +68,9 @@ public class TextMineVocabularyService {
         return String.join("/", this.baseIri, this.baseResourcePostfix, this.corpusResourcePostfix);
     }
 
-    public String asResource(Document document) {
-        return String.join("/", this.baseIri, this.baseResourcePostfix, this.documentResourcePostfix,
-                document.getHash());
-    }
-
-    public String asResource(Corpus corpus) {
-        return String.join("/", this.baseIri, this.baseResourcePostfix, this.corpusResourcePostfix, corpus.getHash());
-    }
-
-    public String asResource(Article article) {
-        return String.join("/", this.baseIri, this.baseResourcePostfix, this.articleResourcePostfix, article.getHash());
-    }
-
-    public String asResource(Note note) {
-        return String.join("/", this.baseIri, this.baseResourcePostfix, this.noteResourcePostfix, note.getHash());
+    public String asResource(RdfEntity entity) {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, entity.getResourcePostfix(this),
+                entity.getHash());
     }
 
     public String personRelation() {

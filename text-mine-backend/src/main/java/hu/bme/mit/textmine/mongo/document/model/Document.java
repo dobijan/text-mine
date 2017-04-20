@@ -19,6 +19,7 @@ import com.querydsl.core.annotations.QueryEntity;
 
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
+import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -76,5 +77,10 @@ public class Document extends BaseMongoEntity {
                 .hashString(String.join(";", this.corpus.getTitle(), this.author, this.title, this.content),
                         StandardCharsets.UTF_8)
                 .toString();
+    }
+
+    @Override
+    public String getResourcePostfix(TextMineVocabularyService vocabulary) {
+        return vocabulary.getDocumentResourcePostfix();
     }
 }

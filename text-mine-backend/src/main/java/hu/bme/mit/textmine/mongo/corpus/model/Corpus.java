@@ -15,6 +15,7 @@ import com.google.common.hash.Hashing;
 import com.querydsl.core.annotations.QueryEntity;
 
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
+import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -47,5 +48,10 @@ public class Corpus extends BaseMongoEntity {
     public String getHash() {
         return Hashing.sha256().hashString(String.join(";", this.title, this.description), StandardCharsets.UTF_8)
                 .toString();
+    }
+
+    @Override
+    public String getResourcePostfix(TextMineVocabularyService vocabulary) {
+        return vocabulary.getCorpusResourcePostfix();
     }
 }

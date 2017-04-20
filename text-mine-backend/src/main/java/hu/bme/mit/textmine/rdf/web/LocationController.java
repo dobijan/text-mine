@@ -1,19 +1,22 @@
 package hu.bme.mit.textmine.rdf.web;
 
+import java.nio.charset.StandardCharsets;
+
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import hu.bme.mit.textmine.rdf.model.RdfStatementsDTO;
 import hu.bme.mit.textmine.rdf.service.LocationService;
 
 @RestController
@@ -29,10 +32,13 @@ public class LocationController {
         return new ResponseEntity<>(this.service.foundInDbpedia(locationName), HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<RdfStatementsDTO> postLocations(MultipartHttpServletRequest request)
-            throws RepositoryException, MalformedQueryException, Exception {
+    @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public @ResponseBody ResponseEntity<byte[]> postLocations(MultipartHttpServletRequest request) {
         MultipartFile file = request.getFile("file");
-        return new ResponseEntity<>(this.service.queryLocations(file), HttpStatus.OK);
+        String content = this.service.queryLocations(file);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment;filename=\"location_links.csv\"");
+        headers.add("Content-Type", "text/csv;charset=UTF-8");
+        return new ResponseEntity<>(content.getBytes(StandardCharsets.UTF_8), headers, HttpStatus.OK);
     }
 }
