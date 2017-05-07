@@ -68,6 +68,14 @@ public class TextMineVocabularyService {
         return String.join("/", this.baseIri, this.baseResourcePostfix, this.corpusResourcePostfix);
     }
 
+    public String section() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.sectionResourcePostfix);
+    }
+
+    public String line() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.lineResourcePostfix);
+    }
+
     public String asResource(RdfEntity entity) {
         return String.join("/", this.baseIri, this.baseResourcePostfix, entity.getResourcePostfix(this),
                 entity.getHash());

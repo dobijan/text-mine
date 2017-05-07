@@ -29,7 +29,7 @@ public class DocumentController {
 
     @Autowired
     private DocumentService service;
-    
+
     @Autowired
     private CorpusService corpusService;
 
@@ -78,6 +78,15 @@ public class DocumentController {
             return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, path = "/{id}/normalize")
+    public ResponseEntity<String> normalize(@PathVariable("id") String id) {
+        Document doc = this.service.normalizeDocument(id);
+        if (doc == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(doc.getNormalized(), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = "/{id}")

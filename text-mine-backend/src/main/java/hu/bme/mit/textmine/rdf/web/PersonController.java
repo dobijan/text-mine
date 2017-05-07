@@ -1,7 +1,6 @@
 package hu.bme.mit.textmine.rdf.web;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.repository.RepositoryException;
@@ -10,7 +9,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,21 +17,19 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import hu.bme.mit.textmine.rdf.model.SpatialQueryRequest;
-import hu.bme.mit.textmine.rdf.model.SpatialQueryResult;
-import hu.bme.mit.textmine.rdf.service.LocationService;
+import hu.bme.mit.textmine.rdf.service.PersonService;
 
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/locations")
-public class LocationController {
+@RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/persons")
+public class PersonController {
 
     @Autowired
-    private LocationService service;
+    private PersonService service;
 
     @RequestMapping(method = RequestMethod.GET, path = "/exists")
-    public ResponseEntity<Boolean> exists(@RequestParam("name") String locationName)
+    public ResponseEntity<Boolean> exists(@RequestParam("name") String personName)
             throws RepositoryException, MalformedQueryException, Exception {
-        return new ResponseEntity<>(this.service.foundInDbpedia(locationName), HttpStatus.OK);
+        return new ResponseEntity<>(this.service.foundInDbpedia(personName), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -41,17 +37,8 @@ public class LocationController {
         MultipartFile file = request.getFile("file");
         String content = this.service.queryResources(file);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment;filename=\"location_links.csv\"");
+        headers.add("Content-Disposition", "attachment;filename=\"person_links.csv\"");
         headers.add("Content-Type", "text/csv;charset=UTF-8");
         return new ResponseEntity<>(content.getBytes(StandardCharsets.UTF_8), headers, HttpStatus.OK);
-    }
-
-    @RequestMapping(method = RequestMethod.POST, path = "/geo-near")
-    public ResponseEntity<List<SpatialQueryResult>> spatialQuery(@RequestBody SpatialQueryRequest request) {
-        List<SpatialQueryResult> result = this.service.geoNearQuery(request.getIri(), request.getRadius());
-        if (result.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

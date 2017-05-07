@@ -22,15 +22,15 @@ import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @org.springframework.data.mongodb.core.mapping.Document(collection = "articles")
 @QueryEntity
 @CompoundIndexes({
@@ -44,7 +44,7 @@ public class Article extends BaseMongoEntity {
 
     private static final long serialVersionUID = -383674994159227800L;
 
-    @DBRef
+    @DBRef(lazy = true)
     @NotNull(message = "Article must be linked to a document!")
     private Document document;
 
@@ -70,8 +70,10 @@ public class Article extends BaseMongoEntity {
     @Indexed
     private PartOfSpeech partOfSpeech;
 
+    @TextIndexed(weight = 10)
     private List<String> externalReferences;
 
+    @TextIndexed(weight = 10)
     private List<String> internalReferences;
 
     private List<FormVariant> formVariants;

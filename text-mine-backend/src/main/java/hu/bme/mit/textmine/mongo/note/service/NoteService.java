@@ -84,8 +84,8 @@ public class NoteService {
         return this.repository.findByQuote(quote);
     }
 
-    public List<Note> languageAgnosticFullTextQuery(String word) {
-        return this.repository.languageAgnosticQuery(word);
+    public Set<Note> languageAgnosticFullTextQuery(List<String> phrases) {
+        return this.repository.languageAgnosticQuery(phrases);
     }
 
     public boolean exists(String id) {

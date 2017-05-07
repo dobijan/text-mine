@@ -3,7 +3,10 @@ package hu.bme.mit.textmine.mongo.document.service;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,17 +17,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
 import hu.bme.mit.textmine.mongo.corpus.service.CorpusService;
+import hu.bme.mit.textmine.mongo.dictionary.model.Article;
+import hu.bme.mit.textmine.mongo.dictionary.model.EntryExample;
+import hu.bme.mit.textmine.mongo.dictionary.model.FormVariant;
+import hu.bme.mit.textmine.mongo.dictionary.model.Inflection;
+import hu.bme.mit.textmine.mongo.dictionary.model.Normalization;
+import hu.bme.mit.textmine.mongo.dictionary.service.ArticleService;
 import hu.bme.mit.textmine.mongo.document.dal.DocumentRepository;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 import hu.bme.mit.textmine.mongo.document.model.Line;
 import hu.bme.mit.textmine.mongo.document.model.Section;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class DocumentService {
 
     private static Pattern pageNumberPattern = Pattern.compile("\\R(\\d+)\\R");
@@ -37,6 +49,9 @@ public class DocumentService {
 
     @Autowired
     private CorpusService corpusService;
+
+    @Autowired
+    private ArticleService articleService;
 
     public boolean exists(String id) {
         return this.repository.exists(id);
@@ -58,8 +73,112 @@ public class DocumentService {
         return this.repository.findByTitle(title);
     }
 
-    public List<Document> languageAgnosticFullTextQuery(String word) {
-        return this.repository.languageAgnosticQuery(word);
+    public Set<Document> languageAgnosticFullTextQuery(List<String> phrases) {
+        return this.repository.languageAgnosticQuery(phrases);
+    }
+
+    public List<Section> sectionRegexQuery(String documentId, String word) {
+        return this.repository.getSectionsByKeyword(documentId, word);
+    }
+
+    public List<Section> pageRegexQuery(String documentId, String word) {
+        return this.repository.getPagesByKeyword(documentId, word);
+    }
+
+    public List<Line> lineRegexQuery(String documentId, int sectionNumber, String word) {
+        return this.repository.getLinesByKeyword(documentId, sectionNumber, word);
+    }
+
+    public Document normalizeDocument(String documentId) {
+        if (!this.repository.exists(documentId)) {
+            return null;
+        }
+        Document doc = this.getDocument(documentId);
+        // tokenize input text
+        Map<Integer, List<String>> pageTokens = Maps.newHashMap();
+        for (Section page : doc.getPages()) {
+            // clean page content (apparently this is required)
+            pageTokens.put(page.getSerial(),
+                    Lists.newArrayList(this.cleanForNormalization(page.getContent()).split("\\s+")));
+        }
+        List<Article> articles = this.articleService.getArticlesByDocument(documentId);
+        Map<Integer, List<Normalization>> pageNormalizations = Maps.newHashMap();
+        for (Article article : articles) {
+            for (FormVariant fv : article.getFormVariants()) {
+                for (Inflection inflection : fv.getInflections()) {
+                    for (EntryExample example : inflection.getExamples()) {
+                        // tokenize example
+                        List<String> exampleTokens = Lists
+                                .newArrayList(this.cleanForNormalization(example.getExampleSentence()).split("\\s+"));
+                        // find example tokens in text tokens
+                        int exampleSentenceIndex = Collections.indexOfSubList(pageTokens.get(example.getPage()),
+                                exampleTokens);
+                        if (exampleSentenceIndex == -1) {
+                            log.warn("Could not find example: " + example.getExampleSentence());
+                            continue;
+                        }
+                        // find word index in example
+                        List<String> inflectionTokens = Lists.newArrayList(inflection.getName().split("\\s+"));
+                        int inflectionIndex = Collections.indexOfSubList(exampleTokens, inflectionTokens);
+                        if (inflectionIndex == -1) {
+                            log.warn("Could not find inflection in example: " + inflection.getName() + " -> "
+                                    + example.getExampleSentence());
+                            continue;
+                        }
+                        // compose normalization command object for later execution
+                        Normalization normalization = Normalization.builder()
+                                .startIndex(exampleSentenceIndex + inflectionIndex)
+                                .endIndex(exampleSentenceIndex + inflectionIndex + inflectionTokens.size())
+                                .replacement(article.getEntryWord()).build();
+                        log.info("Found a normalization for page: " + example.getPage() + ", example: "
+                                + example.getExampleSentence());
+                        if (!pageNormalizations.containsKey(example.getPage())) {
+                            pageNormalizations.put(example.getPage(), Lists.newArrayList(normalization));
+                        } else {
+                            pageNormalizations.get(example.getPage()).add(normalization);
+                        }
+                    }
+                }
+            }
+        }
+        // execute normalization commands
+        Map<Integer, List<String>> normalizedPageTokens = Maps.newHashMap();
+        for (Section page : doc.getPages()) {
+            List<String> normalizedTokensForPage = Lists.newArrayList();
+            List<Normalization> normalizationsForPage = pageNormalizations.get(page.getSerial());
+            for (int i = 0; i < pageTokens.get(page.getSerial()).size(); ++i) {
+                String token = pageTokens.get(page.getSerial()).get(i);
+                // for each token check whether there is a normalization request pending for it
+                // if there is more than one request for a token, it cannot be decided which replacement should occur
+                final int j = i;
+                List<Normalization> normalizationsForToken = normalizationsForPage.stream()
+                        .filter(n -> (n.getStartIndex() <= j) && (n.getEndIndex() > j)).collect(Collectors.toList());
+                if (normalizationsForToken.isEmpty()) {
+                    // there are no normalizations for this token, output token unchanged
+                    normalizedTokensForPage.add(token);
+                } else if (normalizationsForToken.size() > 1) {
+                    // conflicting normalizations, output token unchanged
+                    log.error("Confliction normalizations! Token: " + token + ", normalizations: "
+                            + normalizationsForToken.stream().map(Normalization::getReplacement)
+                                    .collect(Collectors.joining(", ")));
+                    normalizedTokensForPage.add(token);
+                } else {
+                    Normalization normalization = normalizationsForToken.get(0);
+                    // perform normalization
+                    // if this is the first token of the request, then output replacement, else output nothing
+                    if (normalization.getStartIndex() == i) {
+                        normalizedTokensForPage.add(normalization.getReplacement());
+                    }
+                }
+            }
+            normalizedPageTokens.put(page.getSerial(), normalizedTokensForPage);
+        }
+        // compose normalized page tokens into a normalized text
+        List<String> tokens = Lists.newArrayList();
+        normalizedPageTokens.entrySet().stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
+                .forEachOrdered(e -> tokens.addAll(e.getValue()));
+        doc.setNormalized(String.join(" ", tokens));
+        return doc;
     }
 
     public Document createDocument(DocumentFileDTO dto) throws IOException {
@@ -132,5 +251,17 @@ public class DocumentService {
 
     public void removeDocuments(List<Document> documents) {
         this.repository.delete(documents);
+    }
+
+    private String cleanForNormalization(String input) {
+        // clean some kind of references
+        String cleaned = input.replaceAll("\\s*\\[.+\\]\\s*", "");
+        // clean hypehenation
+        cleaned = cleaned.replaceAll("(\\S+)-\\n(\\S+)", "$1$2\n");
+        // clean number appended to words
+        cleaned = cleaned.replaceAll("\\s+([^\\d\\s]+)\\d+", " $1 ");
+        // clean punctuation
+        cleaned = cleaned.replaceAll("[.,;?!:]", "");
+        return cleaned;
     }
 }

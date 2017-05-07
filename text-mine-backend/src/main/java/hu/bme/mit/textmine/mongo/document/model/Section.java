@@ -8,12 +8,12 @@ import com.google.common.hash.Hashing;
 import hu.bme.mit.textmine.mongo.core.RdfEntity;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 public class Section extends RdfEntity {
 
     private int serial;

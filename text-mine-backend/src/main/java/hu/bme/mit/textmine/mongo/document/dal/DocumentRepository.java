@@ -1,6 +1,7 @@
 package hu.bme.mit.textmine.mongo.document.dal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,8 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+
+import com.google.common.collect.Sets;
 
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.QDocument;
@@ -31,8 +34,13 @@ public interface DocumentRepository
 
     public List<Document> findAllByOrderByScoreDesc(TextCriteria criteria);
 
-    public default List<Document> languageAgnosticQuery(String word) {
-        return this.findAllByOrderByScoreDesc(
-                TextCriteria.forLanguage("none").caseSensitive(false).diacriticSensitive(false).matching(word));
+    public default Set<Document> languageAgnosticQuery(List<String> phrases) {
+        Set<Document> docs = Sets.newHashSet();
+        for (String phrase : phrases) {
+            docs.addAll(this.findAllByOrderByScoreDesc(TextCriteria.forLanguage("none").caseSensitive(true)
+                    .diacriticSensitive(true).matchingPhrase(phrase)));
+
+        }
+        return docs;
     }
 }

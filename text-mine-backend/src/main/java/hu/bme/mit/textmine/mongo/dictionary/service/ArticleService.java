@@ -5,6 +5,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,8 +66,7 @@ public class ArticleService {
     }
 
     public List<Article> getArticlesByDocument(String id) {
-        Document document = this.documentService.getDocument(id);
-        if (document == null) {
+        if (!this.documentService.exists(id)) {
             return null;
         }
         return this.repository.findByDocumentId(new ObjectId(id));
@@ -76,8 +76,8 @@ public class ArticleService {
         return this.repository.findByEntryWord(entryWord);
     }
 
-    public List<Article> languageAgnosticFullTextQuery(String word) {
-        return this.repository.languageAgnosticQuery(word);
+    public Set<Article> languageAgnosticFullTextQuery(List<String> phrases) {
+        return this.repository.languageAgnosticQuery(phrases);
     }
 
     public List<PartOfSpeechCsvBean> attachPOSInfo(ArticleFileDTO dto) throws IOException {

@@ -1,4 +1,4 @@
-package hu.bme.mit.textmine.rdf.dal;
+package hu.bme.mit.textmine.rdf.dal.dbpedia;
 
 import java.util.List;
 import java.util.Set;

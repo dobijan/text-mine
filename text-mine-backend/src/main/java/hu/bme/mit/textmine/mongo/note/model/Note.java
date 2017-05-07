@@ -21,12 +21,12 @@ import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @org.springframework.data.mongodb.core.mapping.Document(collection = "notes")
 @QueryEntity
 @CompoundIndexes({
@@ -40,7 +40,7 @@ public class Note extends BaseMongoEntity {
 
     private static final long serialVersionUID = -2197819671880549251L;
 
-    @DBRef
+    @DBRef(lazy = true)
     @NotNull(message = "Annotation must be linked to a document!")
     private Document document;
 

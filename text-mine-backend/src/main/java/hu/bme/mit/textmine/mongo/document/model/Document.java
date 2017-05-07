@@ -21,12 +21,12 @@ import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @org.springframework.data.mongodb.core.mapping.Document(collection = "documents")
 @QueryEntity
 @CompoundIndexes({
@@ -51,6 +51,9 @@ public class Document extends BaseMongoEntity {
     @TextIndexed
     @NotNull(message = "Document content must not be null!")
     private String content;
+
+    @TextIndexed
+    private String normalized;
 
     @Indexed
     @TextIndexed(weight = 2)

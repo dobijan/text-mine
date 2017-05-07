@@ -2,6 +2,7 @@ package hu.bme.mit.textmine.mongo.corpus.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,8 @@ public class CorpusService {
         return this.repository.findOne(id);
     }
 
-    public List<Corpus> languageAgnosticFullTextQuery(String word) {
-        return this.repository.languageAgnosticQuery(word);
+    public Set<Corpus> languageAgnosticFullTextQuery(List<String> phrases) {
+        return this.repository.languageAgnosticQuery(phrases);
     }
 
     public Corpus createCorpus(Corpus corpus) {
