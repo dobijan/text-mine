@@ -2,10 +2,12 @@ package hu.bme.mit.textmine.mongo.document.dal;
 
 import java.util.List;
 
+import hu.bme.mit.textmine.mongo.dictionary.model.Article;
+import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
 import hu.bme.mit.textmine.mongo.document.model.Line;
 import hu.bme.mit.textmine.mongo.document.model.Section;
 
-public interface CustomDocumentRepository {
+interface CustomDocumentRepository {
 
     public List<Line> getLinesByIri(String documentId, List<String> iris);
 
@@ -32,4 +34,8 @@ public interface CustomDocumentRepository {
     public Section getPageByIri(String documentId, String iri);
 
     public List<Section> getPagesByKeyword(String documentId, String keyword);
+
+    public List<Article> getArticlesByEntryWords(List<String> entryWords);
+
+    public List<Article> getArticlesByPartsOfSpeech(List<PartOfSpeech> pos);
 }

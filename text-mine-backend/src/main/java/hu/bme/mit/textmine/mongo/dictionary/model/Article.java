@@ -68,7 +68,7 @@ public class Article extends BaseMongoEntity {
     private String meaning;
 
     @Indexed
-    private PartOfSpeech partOfSpeech;
+    private List<PartOfSpeech> partOfSpeech;
 
     @TextIndexed(weight = 10)
     private List<String> externalReferences;

@@ -21,9 +21,12 @@ import au.com.bytecode.opencsv.bean.CsvToBean;
 import hu.bme.mit.textmine.mongo.dictionary.dal.ArticleRepository;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
 import hu.bme.mit.textmine.mongo.dictionary.model.ArticleFileDTO;
+import hu.bme.mit.textmine.mongo.dictionary.model.DocumentArticles;
 import hu.bme.mit.textmine.mongo.dictionary.model.EntryExample;
 import hu.bme.mit.textmine.mongo.dictionary.model.FormVariant;
 import hu.bme.mit.textmine.mongo.dictionary.model.Inflection;
+import hu.bme.mit.textmine.mongo.dictionary.model.MatchingStrategy;
+import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
 import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
@@ -76,8 +79,41 @@ public class ArticleService {
         return this.repository.findByEntryWord(entryWord);
     }
 
+    public List<Article> getArticlesByFormVariant(String formVariant) {
+        return this.repository.findByFormVariant(formVariant);
+    }
+
+    public List<Article> getArticlesByInflection(String inflection) {
+        return this.repository.findByInflection(inflection);
+    }
+
     public Set<Article> languageAgnosticFullTextQuery(List<String> phrases) {
         return this.repository.languageAgnosticQuery(phrases);
+    }
+
+    public List<Article> getArticlesByPartsOfSpeech(List<PartOfSpeech> pos) {
+        return this.repository.findAllByPartsOfSpeech(pos);
+    }
+
+    public List<Article> queryWithParams(String entryWord, String formVariant, String inflection,
+            PartOfSpeech partOfSpeech, List<String> documentIds, String corpusId, MatchingStrategy matchingStrategy,
+            Integer offset, Integer limit) {
+        return this.repository.findwithParams(entryWord, formVariant, inflection, partOfSpeech, documentIds, corpusId,
+                matchingStrategy, offset, limit);
+    }
+
+    public List<Article> findInDocumentSection(String documentId, Integer sectionNumber) {
+        return this.repository.findByDocumentSection(documentId, sectionNumber);
+    }
+
+    public List<Article> findInDocumentPage(String documentId, Integer pageNumber) {
+        return this.repository.findByDocumentPage(documentId, pageNumber);
+    }
+
+    public List<DocumentArticles> findByDocumentWithParams(String entryWord, String formVariant, String inflection,
+            List<PartOfSpeech> partOfSpeech, MatchingStrategy matchingStrategy, Integer posCount) {
+        return this.repository.getArticlesByDocumentWithParams(entryWord, formVariant, inflection, partOfSpeech,
+                matchingStrategy, posCount);
     }
 
     public List<PartOfSpeechCsvBean> attachPOSInfo(ArticleFileDTO dto) throws IOException {

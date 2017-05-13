@@ -13,12 +13,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import hu.bme.mit.textmine.mongo.corpus.model.Corpus;
 import hu.bme.mit.textmine.mongo.corpus.service.CorpusService;
+import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.DocumentFileDTO;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
@@ -38,6 +40,23 @@ public class DocumentController {
         List<Document> documents = this.service.getAllDocuments();
         if (documents == null || documents.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(documents, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<List<Document>> getFiltered(
+            @RequestParam(required = false) String entryText,
+            @RequestParam(required = false, name = "partOfSpeech") List<String> partsOfSpeech,
+            @RequestParam(required = false, name = "entryWord") List<String> entryWords,
+            @RequestParam(required = false, name = "documentId") List<String> documentIds,
+            @RequestParam(required = false, defaultValue = "0") Integer offset,
+            @RequestParam(required = false, defaultValue = "100") Integer limit) {
+        List<PartOfSpeech> poss = PartOfSpeech.of(partsOfSpeech);
+        List<Document> documents = this.service.getDocumentsWithParams(entryText, poss, entryWords, documentIds, offset,
+                limit);
+        if (documents == null || documents.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(documents, HttpStatus.OK);
     }
@@ -80,7 +99,7 @@ public class DocumentController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(method = RequestMethod.POST, path = "/{id}/normalize")
+    @RequestMapping(method = RequestMethod.POST, path = "/{id}/normalize", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> normalize(@PathVariable("id") String id) {
         Document doc = this.service.normalizeDocument(id);
         if (doc == null) {

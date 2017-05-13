@@ -15,6 +15,9 @@ import org.springframework.stereotype.Repository;
 
 import com.google.common.collect.Lists;
 
+import hu.bme.mit.textmine.mongo.dictionary.model.Article;
+import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
+import hu.bme.mit.textmine.mongo.dictionary.service.ArticleService;
 import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.model.Line;
 import hu.bme.mit.textmine.mongo.document.model.Section;
@@ -24,6 +27,9 @@ public class DocumentRepositoryImpl implements CustomDocumentRepository {
 
     @Autowired
     private MongoTemplate template;
+
+    @Autowired
+    private ArticleService articleService;
 
     private AggregationResults<Section> aggregateBySection(String documentId, String arrayname,
             Criteria sectionCriteria) {
@@ -138,5 +144,15 @@ public class DocumentRepositoryImpl implements CustomDocumentRepository {
     public List<Section> getPagesByKeyword(String documentId, String keyword) {
         return this.aggregateBySection(documentId, "pages", Criteria.where("pages.content").regex(keyword))
                 .getMappedResults();
+    }
+
+    @Override
+    public List<Article> getArticlesByEntryWords(List<String> entryWords) {
+        return Lists.newArrayList(this.articleService.languageAgnosticFullTextQuery(entryWords));
+    }
+
+    @Override
+    public List<Article> getArticlesByPartsOfSpeech(List<PartOfSpeech> pos) {
+        return this.articleService.getArticlesByPartsOfSpeech(pos);
     }
 }
