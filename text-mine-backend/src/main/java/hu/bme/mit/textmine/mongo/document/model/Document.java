@@ -66,6 +66,9 @@ public class Document extends BaseMongoEntity {
     @NotNull(message = "Document pages must not be null!")
     private List<Section> pages;
 
+    @NotNull(message = "Document attachments must not be null!")
+    private List<String> attachmentIds;
+
     @TextScore
     @JsonIgnore
     private Double score;

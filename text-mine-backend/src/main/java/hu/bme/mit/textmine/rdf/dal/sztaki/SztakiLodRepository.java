@@ -1,14 +1,9 @@
 package hu.bme.mit.textmine.rdf.dal.sztaki;
 
-import java.util.Set;
-
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.queryrender.sparql.SPARQLQueryRenderer;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 import lombok.Getter;
 
@@ -23,11 +18,11 @@ public class SztakiLodRepository {
     @Getter
     private static final String PERSON_BASE_URI = "http://lod.sztaki.hu/data/auth/";
 
-    private static final Set<String> TRAVERSAL_ATTRIBUTES = Sets.newHashSet("http://www.w3.org/2002/07/owl#sameAs");
-
-    private ValueFactory vf;
-
-    private SPARQLQueryRenderer renderer;
+    // private static final Set<String> TRAVERSAL_ATTRIBUTES = Sets.newHashSet("http://www.w3.org/2002/07/owl#sameAs");
+    //
+    // private ValueFactory vf;
+    //
+    // private SPARQLQueryRenderer renderer;
 
     private SPARQLRepository repository;
 
@@ -35,8 +30,8 @@ public class SztakiLodRepository {
         this.repository = new SPARQLRepository(URL);
         repository.initialize();
         repository.setAdditionalHttpHeaders(ImmutableMap.of("Accept", "application/rdf+xml"));
-        this.vf = repository.getValueFactory();
-        this.renderer = new SPARQLQueryRenderer();
+        // this.vf = repository.getValueFactory();
+        // this.renderer = new SPARQLQueryRenderer();
     }
 
     // public List<Statement> findPerson(String foafName) {

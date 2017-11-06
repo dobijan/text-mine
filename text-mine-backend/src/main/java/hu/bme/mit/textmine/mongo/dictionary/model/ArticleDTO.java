@@ -22,6 +22,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class ArticleDTO extends BaseMongoEntityDTO {
+
     private String documentId;
 
     private String entryWord;
@@ -29,27 +30,27 @@ public class ArticleDTO extends BaseMongoEntityDTO {
     private Boolean properNoun;
 
     private Boolean derivative;
-    
+
     private String editorNote;
-    
+
     private String meaning;
-    
-    private PartOfSpeech partOfSpeech;
+
+    private List<PartOfSpeech> partOfSpeech;
 
     private List<String> externalReferences;
-    
+
     private List<String> internalReferences;
-    
+
     private List<FormVariant> formVariants;
-    
-    public static ArticleDTO from (Article article) {
+
+    public static ArticleDTO from(Article article) {
         ArticleDTO dto = new ArticleDTO();
         BeanUtils.copyProperties(article, dto);
         dto.setDocumentId(article.getDocument().getId().toString());
         return dto;
     }
-    
-    public static List<ArticleDTO> from (List<Article> articles) {
+
+    public static List<ArticleDTO> from(List<Article> articles) {
         return articles.stream().map(ArticleDTO::from).collect(Collectors.toList());
     }
 }

@@ -40,6 +40,14 @@ public class TextMineVocabularyService {
     @Value("${vocabulary.note.resource.postfix}")
     private String noteResourcePostfix;
 
+    @Getter
+    @Value("${vocabulary.person.resource.postfix}")
+    private String personResourcePostfix;
+
+    @Getter
+    @Value("${vocabulary.location.resource.postfix}")
+    private String locationResourcePostfix;
+
     @Value("${vocabulary.base.relation.postfix}")
     private String baseRelationPostfix;
 
@@ -51,6 +59,12 @@ public class TextMineVocabularyService {
 
     @Value("${vocabulary.person.relation.postfix}")
     private String temporalRelationPostfix;
+
+    @Value("${vocabulary.same.resource.relation.postfix}")
+    private String sameResourceRelationPosftix;
+
+    @Value("${vocabulary.name.alternative.relation.postfix}")
+    private String nameAlternativeRelationPosftix;
 
     public String document() {
         return String.join("/", this.baseIri, this.baseResourcePostfix, this.documentResourcePostfix);
@@ -76,6 +90,14 @@ public class TextMineVocabularyService {
         return String.join("/", this.baseIri, this.baseResourcePostfix, this.lineResourcePostfix);
     }
 
+    public String person() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.personResourcePostfix);
+    }
+
+    public String location() {
+        return String.join("/", this.baseIri, this.baseResourcePostfix, this.locationResourcePostfix);
+    }
+
     public String asResource(RdfEntity entity) {
         return String.join("/", this.baseIri, this.baseResourcePostfix, entity.getResourcePostfix(this),
                 entity.getHash());
@@ -91,5 +113,13 @@ public class TextMineVocabularyService {
 
     public String temporalRelation() {
         return String.join("/", this.baseIri, this.baseRelationPostfix, this.temporalRelationPostfix);
+    }
+
+    public String sameResourceRelation() {
+        return String.join("/", this.baseIri, this.sameResourceRelationPosftix);
+    }
+
+    public String nameAlternativeRelation() {
+        return String.join("/", this.baseIri, this.nameAlternativeRelationPosftix);
     }
 }

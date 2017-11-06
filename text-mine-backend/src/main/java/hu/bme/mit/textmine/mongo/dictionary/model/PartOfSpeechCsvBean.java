@@ -1,8 +1,5 @@
 package hu.bme.mit.textmine.mongo.dictionary.model;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,19 +10,20 @@ import lombok.NoArgsConstructor;
 public class PartOfSpeechCsvBean {
 
     private String word;
-    private List<PartOfSpeech> partOfSpeechMapped;
-    private List<String> partOfSpeech;
+    private PartOfSpeech partOfSpeechMapped;
+    private String partOfSpeech;
 
     public void setWord(String word) {
         this.word = word;
     }
 
-    private void setPartOfSpeechMapped(List<PartOfSpeech> partOfSpeechMapped) {
+    private void setPartOfSpeechMapped(PartOfSpeech partOfSpeechMapped) {
         this.partOfSpeechMapped = partOfSpeechMapped;
     }
 
-    public void setPartOfSpeech(List<String> partOfSpeech) {
+    public void setPartOfSpeech(String partOfSpeech) {
         this.partOfSpeech = partOfSpeech;
-        this.setPartOfSpeechMapped(partOfSpeech.stream().map(PartOfSpeech::of).collect(Collectors.toList()));
+        // this.setPartOfSpeechMapped(partOfSpeech.stream().map(PartOfSpeech::of).collect(Collectors.toList()));
+        this.setPartOfSpeechMapped(PartOfSpeech.of(partOfSpeech));
     }
 }

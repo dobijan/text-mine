@@ -3,9 +3,9 @@ package hu.bme.mit.textmine.mongo.dictionary.web;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +38,7 @@ public class ArticleController {
     private ArticleService articleService;
 
     @Autowired
+    @Lazy
     private DocumentService documentService;
 
     @RequestMapping(method = RequestMethod.GET)
@@ -45,13 +46,13 @@ public class ArticleController {
             @RequestParam(required = false) String entryWord,
             @RequestParam(required = false) String formVariant,
             @RequestParam(required = false) String inflection,
-            @RequestParam(required = false) String partOfSpeech,
+            @RequestParam(required = false) List<String> partOfSpeech,
             @RequestParam(required = false, name = "documentId") List<String> documentIds,
             @RequestParam(required = false) String corpusId,
             @RequestParam(required = false, defaultValue = "EXACT_MATCH") MatchingStrategy matchingStrategy,
             @RequestParam(required = false, defaultValue = "0") Integer offset,
             @RequestParam(required = false, defaultValue = "100") Integer limit) {
-        PartOfSpeech pos = PartOfSpeech.of(partOfSpeech);
+        List<PartOfSpeech> pos = partOfSpeech != null ? PartOfSpeech.of(partOfSpeech) : null;
         List<Article> articles = this.articleService.queryWithParams(entryWord, formVariant, inflection, pos,
                 documentIds, corpusId, matchingStrategy, offset, limit);
         if (articles == null || articles.isEmpty()) {
@@ -78,7 +79,7 @@ public class ArticleController {
             @RequestParam(required = false) String corpusId,
             @RequestParam(required = false, defaultValue = "EXACT_MATCH") MatchingStrategy matchingStrategy,
             @RequestParam(required = false) Integer posCount) {
-        List<PartOfSpeech> pos = partOfSpeech.stream().map(PartOfSpeech::of).collect(Collectors.toList());
+        List<PartOfSpeech> pos = partOfSpeech != null ? PartOfSpeech.of(partOfSpeech) : null;
         List<DocumentArticles> groups = this.articleService.findByDocumentWithParams(entryWord, formVariant, inflection,
                 pos, matchingStrategy, posCount);
         if (groups == null) {

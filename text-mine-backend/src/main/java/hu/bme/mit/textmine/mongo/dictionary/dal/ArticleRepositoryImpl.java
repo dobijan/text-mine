@@ -9,7 +9,9 @@ import java.util.function.BiFunction;
 
 import javax.annotation.Resource;
 
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -20,7 +22,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.collect.Lists;
-import com.mongodb.WriteResult;
+import com.mongodb.client.result.UpdateResult;
 
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
 import hu.bme.mit.textmine.mongo.dictionary.model.DocumentArticles;
@@ -33,20 +35,23 @@ import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 class ArticleRepositoryImpl implements CustomArticleRepository {
 
     @Resource
+    @Lazy
     private MongoTemplate template;
 
     @Autowired
+    @Lazy
     private DocumentService documentService;
 
     @Override
-    public boolean updatePOS(String entryWord, List<PartOfSpeech> pos) {
+    public boolean updatePOS(String documentId, String entryWord, List<PartOfSpeech> pos) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("entryWord").is(entryWord));
+        query.addCriteria(Criteria.where("entryWord").is(entryWord).and("document.$id").is(new ObjectId(documentId)));
         query.fields().include("entryWord");
+        query.fields().include("document");
         Update update = new Update();
         update.set("partOfSpeech", pos);
-        WriteResult res = this.template.updateFirst(query, update, Article.class);
-        return res.getN() > 0;
+        UpdateResult res = this.template.updateFirst(query, update, Article.class);
+        return res.getModifiedCount() > 0;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package hu.bme.mit.textmine.mongo.note;
+package hu.bme.mit.textmine.mongo.note.model;
 
 import java.util.List;
 

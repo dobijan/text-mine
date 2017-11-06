@@ -9,7 +9,7 @@ import hu.bme.mit.textmine.mongo.document.model.Section;
 
 interface CustomArticleRepository {
 
-    public boolean updatePOS(String entryWord, List<PartOfSpeech> pos);
+    public boolean updatePOS(String documentId, String entryWord, List<PartOfSpeech> pos);
 
     public Section getDocumentSection(String documentId, Integer sectionNumber);
 

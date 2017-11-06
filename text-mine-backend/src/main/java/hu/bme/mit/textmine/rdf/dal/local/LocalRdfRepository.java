@@ -1,15 +1,26 @@
 package hu.bme.mit.textmine.rdf.dal.local;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.jena.ext.com.google.common.collect.Lists;
+import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.QueryResults;
+import org.eclipse.rdf4j.query.algebra.Compare.CompareOp;
+import org.eclipse.rdf4j.query.parser.ParsedQuery;
+import org.eclipse.rdf4j.query.parser.ParsedTupleQuery;
+import org.eclipse.rdf4j.queryrender.builder.QueryBuilder;
+import org.eclipse.rdf4j.queryrender.builder.QueryBuilderFactory;
+import org.eclipse.rdf4j.queryrender.sparql.SPARQLQueryRenderer;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.repository.util.Repositories;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +28,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import hu.bme.mit.textmine.rdf.model.SpatialQueryResult;
+import hu.bme.mit.textmine.rdf.model.Triple;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Repository
+@Slf4j
 public class LocalRdfRepository {
 
     private static final Pattern geoPointPattern = Pattern.compile("POINT\\((\\d+(?:\\.\\d+)?) (\\d+(?:\\.\\d+)?)\\)");
@@ -33,9 +49,10 @@ public class LocalRdfRepository {
     @Value("${rdf.db}")
     private String DATABASE_NAME;
 
+    @Getter
     private ValueFactory vf;
 
-    // private SPARQLQueryRenderer renderer;
+    private SPARQLQueryRenderer renderer;
 
     private HTTPRepository repository;
 
@@ -45,11 +62,30 @@ public class LocalRdfRepository {
         // repository.setAdditionalHttpHeaders(ImmutableMap.of("Accept",
         // "application/sparql-results+xml"));
         this.vf = repository.getValueFactory();
-        // this.renderer = new SPARQLQueryRenderer();
+        this.renderer = new SPARQLQueryRenderer();
+    }
+
+    @SneakyThrows(Exception.class)
+    public boolean subjectExists(String iri) {
+        ParsedQuery q = QueryBuilderFactory.construct().addProjectionVar("s", "p", "o").group().atom("s", "p", "o")
+                .filter("s", CompareOp.EQ, vf.createIRI(iri)).closeGroup().query();
+        return Repositories.graphQuery(repository, renderer.render(q), QueryResults::singleResult) != null;
     }
 
     public void save(List<Statement> statements) {
-        Repositories.consume(repository, conn -> conn.add(statements));
+        // Repositories.consume(repository, conn -> conn.add(statements));
+        try (RepositoryConnection conn = repository.getConnection()) {
+            conn.begin(IsolationLevels.NONE);
+            try {
+                conn.add(statements);
+                log.info("Statements added.");
+                conn.commit();
+                log.info("Transaction committed.");
+            } catch (RepositoryException e) {
+                log.error("Transaction rolled back: " + e.getStackTrace());
+                conn.rollback();
+            }
+        }
     }
 
     public Statement prepareRelation(String subject, String predicate, String object) {
@@ -57,12 +93,28 @@ public class LocalRdfRepository {
                 vf.createIRI(this.vocabulary.getBaseIri()));
     }
 
-    public List<Statement> prepareResource(String subject, String label, String type) {
+    public List<Statement> prepareResource(String subject, String label, String type, List<String> alternativeNames) {
         List<Statement> statements = Lists.newArrayList();
         statements.add(this.vf.createStatement(vf.createIRI(subject), RDFS.LABEL, vf.createLiteral(label),
                 vf.createIRI(this.vocabulary.getBaseIri())));
         statements.add(this.vf.createStatement(vf.createIRI(subject), RDF.TYPE, vf.createIRI(type),
                 vf.createIRI(this.vocabulary.getBaseIri())));
+        for (String alternative : alternativeNames) {
+            statements.add(
+                    this.vf.createStatement(vf.createIRI(subject),
+                            vf.createIRI(this.vocabulary.nameAlternativeRelation()), vf.createLiteral(alternative),
+                            vf.createIRI(this.vocabulary.getBaseIri())));
+        }
+        return statements;
+    }
+
+    public List<Statement> createSameAsResources(String iri, Set<String> sameAsResources) {
+        List<Statement> statements = Lists.newArrayList();
+        for (String sameAsResource : sameAsResources) {
+            statements.add(this.vf.createStatement(vf.createIRI(iri),
+                    vf.createIRI(this.vocabulary.sameResourceRelation()), vf.createIRI(sameAsResource),
+                    vf.createIRI(this.vocabulary.getBaseIri())));
+        }
         return statements;
     }
 
@@ -95,5 +147,77 @@ public class LocalRdfRepository {
             }
         });
         return results;
+    }
+
+    public List<String> getIriForResourceName(String name, String resourceType) {
+        List<String> results = Lists.newArrayList();
+        String q = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+                "select distinct ?s where { " +
+                "  ?s ?p ?o . " +
+                "  ?s rdf:type <" + resourceType + "> . " +
+                "    {?s rdfs:label \"" + name + "\"} " +
+                "  UNION " +
+                "    {?s <" + this.vocabulary.nameAlternativeRelation() + "> \"" + name + "\"} " +
+                "  UNION " +
+                "    {?s <" + this.vocabulary.sameResourceRelation() + "> ?s2 . " +
+                "     ?s2 rdfs:label \"" + name + "\" . } . " +
+                "}";
+        Repositories.tupleQuery(this.repository, q, QueryResults::asList)
+                .forEach(bindingSet -> results.add(bindingSet.getValue("s").toString()));
+        return results;
+    }
+
+    @SneakyThrows(Exception.class)
+    public List<String> entitiesForResource(List<String> iris, String relationType, String entityType) {
+        List<String> result = Lists.newArrayList();
+        // ParsedQuery q = QueryBuilderFactory.select("subject").group()
+        // .atom("subject", RDF.TYPE, vf.createIRI(entityType)).closeGroup().group()
+        // .atom("subject", vf.createIRI(relationType), vf.createIRI(iri)).closeGroup().query();
+        String iriCondition = String.join(" ", iris.stream().map(iri -> "<" + iri + ">").collect(Collectors.toList()));
+        String q = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+                "select distinct ?s where { " +
+                "  ?s rdf:type <" + entityType + "> . " +
+                "  VALUES ?iri { " + iriCondition + " } " +
+                "  ?s <" + relationType + "> ?iri . " +
+                "}";
+        Repositories.tupleQuery(this.repository, q, QueryResults::asList).forEach(bindingSet -> {
+            result.add(bindingSet.getValue("s").stringValue());
+        });
+        return result;
+    }
+
+    @SneakyThrows(Exception.class)
+    public List<String> resourcesForEntity(String iri, String relationType, String entityType) {
+        List<String> result = Lists.newArrayList();
+        ParsedQuery q = QueryBuilderFactory.select("object").group()
+                .atom(vf.createIRI(iri), RDF.TYPE, vf.createIRI(entityType)).closeGroup().group()
+                .atom(vf.createIRI(iri), vf.createIRI(relationType), "object").closeGroup().query();
+        Repositories.tupleQuery(this.repository, this.renderer.render(q), QueryResults::asList).forEach(bindingSet -> {
+            result.add(bindingSet.getValue("object").stringValue());
+        });
+        return result;
+    }
+
+    @SneakyThrows(Exception.class)
+    public List<String> entitiesForPredicates(List<Triple> predicates, String varName) {
+        List<String> result = Lists.newArrayList();
+        QueryBuilder<ParsedTupleQuery> qb = QueryBuilderFactory.select(varName);
+        for (Triple predicate : predicates) {
+            if (predicate.getObject() instanceof org.eclipse.rdf4j.model.Value) {
+                qb = qb.group().atom(predicate.getSubject(), predicate.getPredicate(),
+                        (org.eclipse.rdf4j.model.Value) predicate.getObject())
+                        .closeGroup();
+            } else {
+                qb = qb.group().atom(predicate.getSubject(), predicate.getPredicate(),
+                        (String) predicate.getObject())
+                        .closeGroup();
+            }
+        }
+        Repositories.tupleQuery(this.repository, this.renderer.render(qb.query()), QueryResults::asList)
+                .forEach(bindingSet -> {
+                    result.add(bindingSet.getValue(varName).stringValue());
+                });
+        return result;
     }
 }

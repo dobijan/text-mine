@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import hu.bme.mit.textmine.mongo.corpus.dal.CorpusRepository;
@@ -16,6 +17,7 @@ import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 public class CorpusService {
 
     @Autowired
+    @Lazy
     private CorpusRepository repository;
 
     @Autowired
@@ -26,7 +28,7 @@ public class CorpusService {
     }
 
     public Corpus getCorpus(String id) {
-        return this.repository.findOne(id);
+        return this.repository.findById(id).orElse(null);
     }
 
     public Set<Corpus> languageAgnosticFullTextQuery(List<String> phrases) {
@@ -42,7 +44,7 @@ public class CorpusService {
     }
 
     public Corpus updateCorpus(Corpus corpus) {
-        Corpus oldCorpus = this.repository.findOne(corpus.getId().toString());
+        Corpus oldCorpus = this.repository.findById(corpus.getId().toString()).orElse(null);
         if (oldCorpus != null) {
             oldCorpus.setDescription(corpus.getDescription());
             oldCorpus.setTitle(corpus.getTitle());

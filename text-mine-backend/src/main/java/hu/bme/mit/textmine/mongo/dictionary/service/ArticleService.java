@@ -5,19 +5,28 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.solr.core.query.result.GroupResult;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
 import au.com.bytecode.opencsv.bean.CsvToBean;
+import hu.bme.mit.textmine.mongo.core.SearchStrategy;
 import hu.bme.mit.textmine.mongo.dictionary.dal.ArticleRepository;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
 import hu.bme.mit.textmine.mongo.dictionary.model.ArticleFileDTO;
@@ -29,8 +38,22 @@ import hu.bme.mit.textmine.mongo.dictionary.model.MatchingStrategy;
 import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
 import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.document.model.Document;
+import hu.bme.mit.textmine.mongo.document.model.Section;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
+import hu.bme.mit.textmine.solr.dal.article.SolrArticleRepository;
+import hu.bme.mit.textmine.solr.dal.document.SolrDocumentRepository;
+import hu.bme.mit.textmine.solr.dal.form_variant.SolrFormVariantRepository;
+import hu.bme.mit.textmine.solr.dal.inflection.SolrInflectionRepository;
+import hu.bme.mit.textmine.solr.dal.page.SolrPageRepository;
+import hu.bme.mit.textmine.solr.dal.section.SolrSectionRepository;
+import hu.bme.mit.textmine.solr.model.SolrArticle;
+import hu.bme.mit.textmine.solr.model.SolrArticleWrapper;
+import hu.bme.mit.textmine.solr.model.SolrDocument;
+import hu.bme.mit.textmine.solr.model.SolrFormVariant;
+import hu.bme.mit.textmine.solr.model.SolrInflection;
+import hu.bme.mit.textmine.solr.model.SolrPage;
+import hu.bme.mit.textmine.solr.model.SolrSection;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -45,23 +68,53 @@ public class ArticleService {
             meaningPattern = Pattern.compile("^.*<J>(.*)</J>.*$"),
             formVariantPattern = Pattern.compile("^.*<Q>(.*)</Q>.*$"),
             inflectionPattern = Pattern.compile("^.*<B>(.*)</B>( – )?(\\d+)?.*$"),
-            occurrencePattern = Pattern.compile("^(.*<I>.*</I>.*) \\(TL (\\d+)\\).*$");
+            occurrencePattern = Pattern.compile("^(.*<I>.*</I>.*) \\(TL (\\d+)\\).*$"),
+            entryPattern = Pattern.compile("\\<entry headword=\"(.*)\"\\>\\R+([\\S\\s]*?)\\R+\\<\\/entry\\>");
+
+    @Value("${search.strategy}")
+    private SearchStrategy searchStrategy;
 
     @Autowired
+    @Lazy
     private ArticleRepository repository;
 
     @Autowired
+    @Lazy
     private DocumentService documentService;
 
     @Autowired
     private TextMineVocabularyService vocabulary;
+
+    @Autowired
+    private SolrArticleRepository solrArticleRepository;
+
+    @Autowired
+    private SolrFormVariantRepository solrFormVariantRepository;
+
+    @Autowired
+    private SolrInflectionRepository solrInflectionRepository;
+
+    @Autowired
+    private SolrDocumentRepository solrDocumentRepository;
+
+    @Autowired
+    private SolrPageRepository solrPageRepository;
+
+    @Autowired
+    private SolrSectionRepository solrSectionRepository;
+
+    // @Autowired
+    // private SolrLineRepository solrLineRepository;
+    //
+    // @Autowired
+    // private SolrWordRepository solrWordRepository;
 
     public boolean exists(String id) {
         return this.repository.exists(id);
     }
 
     public Article getArticle(String id) {
-        return this.repository.findOne(id);
+        return this.repository.findById(id).orElse(null);
     }
 
     public List<Article> getAll() {
@@ -87,8 +140,14 @@ public class ArticleService {
         return this.repository.findByInflection(inflection);
     }
 
-    public Set<Article> languageAgnosticFullTextQuery(List<String> phrases) {
-        return this.repository.languageAgnosticQuery(phrases);
+    public Set<Article> languageAgnosticFullTextQuery(List<String> phrases, boolean exact) {
+        if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
+            return this.repository.languageAgnosticQuery(phrases);
+        } else {
+            List<SolrArticle> solrArticles = this.solrArticleRepository.phrasesQuery(null, phrases, exact, true);
+            return Sets.newHashSet(this.repository.findAllById(
+                    solrArticles.stream().map(SolrArticle::getId).map(ObjectId::new).collect(Collectors.toList())));
+        }
     }
 
     public List<Article> getArticlesByPartsOfSpeech(List<PartOfSpeech> pos) {
@@ -96,24 +155,69 @@ public class ArticleService {
     }
 
     public List<Article> queryWithParams(String entryWord, String formVariant, String inflection,
-            PartOfSpeech partOfSpeech, List<String> documentIds, String corpusId, MatchingStrategy matchingStrategy,
-            Integer offset, Integer limit) {
-        return this.repository.findwithParams(entryWord, formVariant, inflection, partOfSpeech, documentIds, corpusId,
-                matchingStrategy, offset, limit);
+            List<PartOfSpeech> partOfSpeech, List<String> documentIds, String corpusId,
+            MatchingStrategy matchingStrategy, Integer offset, Integer limit) {
+        if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
+            return this.repository.findwithParams(entryWord, formVariant, inflection, partOfSpeech, documentIds,
+                    corpusId, matchingStrategy, offset, limit);
+        } else {
+            List<SolrArticle> articles = this.solrArticleRepository.findWithParams(entryWord, formVariant, inflection,
+                    partOfSpeech, documentIds, corpusId, matchingStrategy, offset, limit);
+            List<String> articleIds = articles.stream().map(SolrArticle::getId).collect(Collectors.toList());
+            List<Article> mongoArticles = Lists.newArrayList();
+            this.repository.findAllById(articleIds).forEach(mongoArticles::add);
+            return mongoArticles;
+        }
+    }
+
+    public List<Article> frequentArticlesByPOS(PartOfSpeech pos, List<String> documentIds, int page, int size) {
+        List<SolrArticle> solrArticles = this.solrArticleRepository.findByDocumentIdAndPOSOrderByFrequency(pos,
+                documentIds, page, size);
+        return this.repository
+                .findAllById(solrArticles.stream().map(a -> new ObjectId(a.getId())).collect(Collectors.toList()));
     }
 
     public List<Article> findInDocumentSection(String documentId, Integer sectionNumber) {
-        return this.repository.findByDocumentSection(documentId, sectionNumber);
+        if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
+            return this.repository.findByDocumentSection(documentId, sectionNumber);
+        } else {
+            Section page = this.documentService.getSectionBySerial(documentId, sectionNumber);
+            List<ObjectId> ids = this.solrInflectionRepository.findInText(page.getContent()).stream()
+                    .map(id -> new ObjectId(id)).collect(Collectors.toList());
+            return this.repository.findAllById(ids);
+        }
     }
 
     public List<Article> findInDocumentPage(String documentId, Integer pageNumber) {
-        return this.repository.findByDocumentPage(documentId, pageNumber);
+        if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
+            return this.repository.findByDocumentPage(documentId, pageNumber);
+        } else {
+            Section page = this.documentService.getPageBySerial(documentId, pageNumber);
+            List<ObjectId> ids = this.solrInflectionRepository.findInText(page.getContent()).stream()
+                    .map(id -> new ObjectId(id)).collect(Collectors.toList());
+            return this.repository.findAllById(ids);
+        }
     }
 
     public List<DocumentArticles> findByDocumentWithParams(String entryWord, String formVariant, String inflection,
             List<PartOfSpeech> partOfSpeech, MatchingStrategy matchingStrategy, Integer posCount) {
-        return this.repository.getArticlesByDocumentWithParams(entryWord, formVariant, inflection, partOfSpeech,
-                matchingStrategy, posCount);
+        if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
+            return this.repository.getArticlesByDocumentWithParams(entryWord, formVariant, inflection, partOfSpeech,
+                    matchingStrategy, posCount);
+        } else {
+            GroupResult<SolrArticle> groups = this.solrArticleRepository.findWithParamsByDocumentId(entryWord,
+                    formVariant, inflection, partOfSpeech, matchingStrategy, posCount);
+            List<DocumentArticles> docArticles = Lists.newArrayList();
+            groups.getGroupEntries().forEach(entry -> {
+                List<Article> articles = this.repository.findAllById(entry.getResult().getContent().stream()
+                        .map(a -> new ObjectId(a.getId())).collect(Collectors.toList()));
+                docArticles.add(DocumentArticles.builder()
+                        .document(entry.getGroupValue())
+                        .articles(articles)
+                        .build());
+            });
+            return docArticles;
+        }
     }
 
     public List<PartOfSpeechCsvBean> attachPOSInfo(ArticleFileDTO dto) throws IOException {
@@ -123,14 +227,95 @@ public class ArticleService {
         }
         String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
         List<PartOfSpeechCsvBean> posTags = this.parseCsvToPos(content);
+        // replace all control characters with nothing
+        for (PartOfSpeechCsvBean postag : posTags) {
+            postag.setWord(postag.getWord().replaceAll("\\p{C}", ""));
+            postag.setPartOfSpeech(postag.getPartOfSpeech().replaceAll("\\p{C}", ""));
+        }
+        List<String> foundWords = Lists.newArrayList();
         for (PartOfSpeechCsvBean posTag : posTags) {
-            // Article article =
-            // this.repository.findByEntryWord(posTag.getWord());
-            if (!this.repository.updatePOS(posTag.getWord().trim(), posTag.getPartOfSpeechMapped())) {
+            if (!this.repository.updatePOS(dto.getDocumentId(), posTag.getWord().trim(),
+                    Lists.newArrayList(posTag.getPartOfSpeechMapped()))) {
                 log.error("Could not find article for: " + posTag.getWord().trim());
+            } else {
+                String word = posTag.getWord().trim();
+                log.info("Found article for: " + word);
+                foundWords.add(word);
             }
         }
+        Map<String, Article> articleMap = Maps.newHashMap();
+        List<Article> as = this.repository.findByDocumentId(new ObjectId(dto.getDocumentId()));
+        for (Article a : as) {
+            articleMap.put(a.getEntryWord(), a);
+        }
+        for (String word : foundWords) {
+            log.info("Updating Solr entities for: " + word);
+            // this.removeSolrEntitiesByArticle(a.getId().toString());
+            this.saveSolrEntities(this.createSolrEntities(articleMap.get(word), dto.getDocumentId()));
+        }
+        log.info("Committing.");
+        this.commitSolr();
+        log.info("Get document solr entities.");
+        List<Article> articles = this.repository.findByDocumentId(new ObjectId(dto.getDocumentId()));
+        SolrDocument solrDocument = this.solrDocumentRepository.findById(dto.getDocumentId()).orElse(null);
+        List<SolrPage> solrPages = this.solrPageRepository.findByDocumentId(dto.getDocumentId());
+        List<SolrSection> solrSections = this.solrSectionRepository.findByDocumentId(dto.getDocumentId());
+        // List<SolrLine> solrLines = this.solrLineRepository.findByDocumentId(dto.getDocumentId());
+        // List<SolrWord> solrWords = this.solrWordRepository.findByDocumentId(dto.getDocumentId());
+        // tokenize input text
+        log.info("Part of speech tagging.");
+        Map<String, Set<PartOfSpeech>> tags = this.createPosMap(articles);
+        solrSections.forEach(s -> s
+                .setPartsOfSpeech(this.textToPosTags(documentService.cleanForNormalization(s.getContent()), tags)));
+        log.info("Sections done");
+        solrPages.forEach(p -> p
+                .setPartsOfSpeech(this.textToPosTags(documentService.cleanForNormalization(p.getContent()), tags)));
+        log.info("Pages done.");
+        solrDocument
+                .setPartsOfSpeech(solrPages.stream().map(SolrPage::getPartsOfSpeech).collect(Collectors.joining("\n")));
+        log.info("Document done. Saving.");
+        this.solrDocumentRepository.saveNoCommit(solrDocument);
+        this.solrSectionRepository.saveNoCommit(solrSections);
+        this.solrPageRepository.saveNoCommit(solrPages);
+        log.info("Committing.");
+        this.commitSolr();
         return posTags;
+    }
+
+    private Map<String, Set<PartOfSpeech>> createPosMap(List<Article> documentArticles) {
+        Map<String, Set<PartOfSpeech>> tags = Maps.newHashMap();
+        for (Article article : documentArticles) {
+            if (article.getPartOfSpeech() == null || article.getPartOfSpeech().isEmpty()
+                    || article.getPartOfSpeech().stream().allMatch(Objects::isNull)) {
+                continue;
+            }
+            for (FormVariant formVariant : article.getFormVariants()) {
+                for (Inflection inflection : formVariant.getInflections()) {
+                    if (inflection.getExamples() == null || inflection.getExamples().isEmpty()) {
+                        continue;
+                    }
+                    if (tags.containsKey(inflection.getName())) {
+                        tags.get(inflection.getName()).addAll(article.getPartOfSpeech());
+                    } else {
+                        tags.put(inflection.getName(), Sets.newHashSet(article.getPartOfSpeech()));
+                    }
+                }
+            }
+        }
+        return tags;
+    }
+
+    private String textToPosTags(String text, Map<String, Set<PartOfSpeech>> tags) {
+        String replacedText = new String(text);
+        for (String key : tags.keySet()) {
+            replacedText = replacedText.replaceAll("([\\s\\p{Z}]+)(" + Pattern.quote(key) + ")([\\s\\p{Z}]+)",
+                    "$1" + Matcher.quoteReplacement(key) + "["
+                            + Matcher.quoteReplacement(String.join("][",
+                                    tags.get(key).stream().filter(Objects::nonNull).map(PartOfSpeech::toString)
+                                            .collect(Collectors.toList())))
+                            + "]" + "$3");
+        }
+        return replacedText;
     }
 
     public List<Article> createMultipleArticles(ArticleFileDTO dto) throws IOException {
@@ -140,19 +325,26 @@ public class ArticleService {
         }
         Document document = this.documentService.getDocument(dto.getDocumentId());
         String content = new String(dto.getFile().getBytes(), StandardCharsets.UTF_8);
-        String[] inputSections = content.split("\\n\\n");
+        Matcher entryMatcher = entryPattern.matcher(content);
         List<Article> articles = Lists.newArrayList();
-        log.info("Articles found: " + inputSections.length);
+        Map<String, String> entryStrings = Maps.newHashMap();
+        while (entryMatcher.find()) {
+            entryStrings.put(entryMatcher.group(1), entryMatcher.group(2));
+        }
+        log.info("Articles found: " + entryStrings.size());
         int idx = 1;
-        for (String section : inputSections) {
+        for (String section : entryStrings.values()) {
             log.info("Parsing " + idx + ". article.");
             ++idx;
             Article article = this.parseToArticle(section, document);
             if (article != null) {
                 articles.add(article);
-                this.repository.insert(article);
             }
         }
+        this.repository.insert(articles);
+        articles.forEach(a -> this.saveSolrEntities(this.createSolrEntities(a, dto.getDocumentId())));
+        this.commitSolr();
+        this.documentService.normalizeDocument(document, articles);
         return articles;
     }
 
@@ -167,7 +359,111 @@ public class ArticleService {
         if (article == null) {
             return null;
         }
-        return this.repository.insert(article);
+        article = this.repository.insert(article);
+        this.saveSolrEntities(this.createSolrEntities(article, dto.getDocumentId()));
+        this.commitSolr();
+        return article;
+    }
+
+    private SolrArticleWrapper createSolrEntities(final Article article, String documentId) {
+        SolrArticle solrArticle = SolrArticle.builder()
+                .derivative(article.getDerivative())
+                .documentId(documentId)
+                .editorNote(article.getEditorNote())
+                .entryWord(article.getEntryWord())
+                .externalReferences(article.getExternalReferences())
+                .formVariants(article.getFormVariants().stream().map(v -> v.getName()).collect(Collectors.toList()))
+                .id(article.getId().toString())
+                .inflections(article.getFormVariants().stream()
+                        .map(v -> v.getInflections().stream().map(i -> i.getName()).collect(Collectors.toList()))
+                        .flatMap(l -> l.stream()).collect(Collectors.toList()))
+                .internalReferences(article.getInternalReferences())
+                .meaning(article.getMeaning())
+                .partOfSpeech(
+                        article.getPartOfSpeech().stream()
+                                .filter(Objects::nonNull)
+                                .map(pos -> pos.toString())
+                                .collect(Collectors.toList()))
+                .properNoun(article.getProperNoun())
+                .build();
+        List<SolrFormVariant> solrFormVariants = Lists.newArrayList();
+        List<SolrInflection> solrInflections = Lists.newArrayList();
+        article.getFormVariants().forEach(v -> {
+            v.getInflections().forEach(i -> {
+                List<String> examples = i.getExamples().stream().map(e -> e.getExampleSentence())
+                        .collect(Collectors.toList());
+                solrInflections.add(SolrInflection.builder()
+                        .articleId(article.getId().toString())
+                        .documentId(documentId)
+                        .examples(examples)
+                        .id(i.getName() + "#" + v.getName() + "@" + article.getId().toString())
+                        .name(i.getName())
+                        .occurrences(i.getOccurrences())
+                        .build());
+                solrArticle.setFrequency(solrArticle.getFrequency() + examples.size());
+            });
+            solrFormVariants.add(SolrFormVariant.builder()
+                    .articleId(article.getId().toString())
+                    .documentId(documentId)
+                    .id(v.getName() + "@" + article.getId().toString())
+                    .inflections(v.getInflections().stream().map(i -> i.getName()).collect(Collectors.toList()))
+                    .name(v.getName())
+                    .build());
+        });
+        return SolrArticleWrapper.builder()
+                .article(solrArticle)
+                .formVariants(solrFormVariants)
+                .inflections(solrInflections)
+                .build();
+    }
+
+    private void saveSolrEntities(SolrArticleWrapper entities) {
+        SolrArticle a = entities.getArticle();
+        this.solrArticleRepository.saveNoCommit(a);
+        List<SolrFormVariant> fws = entities.getFormVariants();
+        if (!fws.isEmpty()) {
+            this.solrFormVariantRepository.saveNoCommit(fws);
+        }
+        List<SolrInflection> ifs = entities.getInflections();
+        if (!ifs.isEmpty()) {
+            this.solrInflectionRepository.saveNoCommit(ifs);
+        }
+    }
+
+    private void commitSolr() {
+        this.solrArticleRepository.commit();
+        this.solrFormVariantRepository.commit();
+        this.solrInflectionRepository.commit();
+        this.solrDocumentRepository.commit();
+        this.solrPageRepository.commit();
+        this.solrSectionRepository.commit();
+    }
+
+    public void removeSolrEntitiesByDocument(String documentId) {
+        List<SolrArticle> solrArticles = this.solrArticleRepository.findByDocumentId(documentId);
+        List<SolrInflection> solrInflections = this.solrInflectionRepository.findByDocumentId(documentId);
+        List<SolrFormVariant> solrFormVariants = this.solrFormVariantRepository.findByDocumentId(documentId);
+        if (!solrArticles.isEmpty()) {
+            this.solrArticleRepository.deleteAll(solrArticles);
+        }
+        if (!solrFormVariants.isEmpty()) {
+            this.solrFormVariantRepository.deleteAll(solrFormVariants);
+        }
+        if (!solrInflections.isEmpty()) {
+            this.solrInflectionRepository.deleteAll(solrInflections);
+        }
+    }
+
+    private void removeSolrEntitiesByArticle(String articleId) {
+        List<SolrFormVariant> solrFormVariants = this.solrFormVariantRepository.findByArticleId(articleId);
+        List<SolrInflection> solrInflections = this.solrInflectionRepository.findByArticleId(articleId);
+        this.solrArticleRepository.deleteById(articleId);
+        if (!solrFormVariants.isEmpty()) {
+            this.solrFormVariantRepository.deleteAll(solrFormVariants);
+        }
+        if (!solrInflections.isEmpty()) {
+            this.solrInflectionRepository.deleteAll(solrInflections);
+        }
     }
 
     private List<PartOfSpeechCsvBean> parseCsvToPos(String content) {
@@ -191,6 +487,7 @@ public class ArticleService {
         article.setInternalReferences(Lists.newArrayList());
         article.setExternalReferences(Lists.newArrayList());
         article.setFormVariants(Lists.newArrayList());
+        article.setPartOfSpeech(Lists.newArrayList());
 
         FormVariant currentFormVariant = null;
         Inflection currentInflection = null;
@@ -294,15 +591,19 @@ public class ArticleService {
     }
 
     public Article updateArticle(Article article) {
-        this.repository.save(article);
+        article = this.repository.save(article);
+        this.removeSolrEntitiesByArticle(article.getId().toString());
+        this.saveSolrEntities(this.createSolrEntities(article, article.getDocument().getId().toString()));
         return article;
     }
 
     public void removeArticle(String id) {
-        this.repository.delete(id);
+        this.repository.deleteById(id);
+        this.removeSolrEntitiesByArticle(id);
     }
 
     public void removeArticles(List<Article> articles) {
-        this.repository.delete(articles);
+        this.repository.deleteAll(articles);
+        articles.forEach(a -> this.removeSolrEntitiesByArticle(a.getId().toString()));
     }
 }

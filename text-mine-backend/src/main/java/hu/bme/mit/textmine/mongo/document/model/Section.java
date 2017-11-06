@@ -18,6 +18,7 @@ public class Section extends RdfEntity {
 
     private int serial;
     private String content;
+    private String normalized;
     private List<Line> lines;
 
     @Override

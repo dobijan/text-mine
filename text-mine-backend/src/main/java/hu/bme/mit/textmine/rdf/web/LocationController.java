@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import hu.bme.mit.textmine.mongo.document.model.Line;
+import hu.bme.mit.textmine.mongo.document.model.QueryHits;
+import hu.bme.mit.textmine.mongo.document.model.Section;
 import hu.bme.mit.textmine.rdf.model.SpatialQueryRequest;
 import hu.bme.mit.textmine.rdf.model.SpatialQueryResult;
 import hu.bme.mit.textmine.rdf.service.LocationService;
@@ -49,6 +52,58 @@ public class LocationController {
     @RequestMapping(method = RequestMethod.POST, path = "/geo-near")
     public ResponseEntity<List<SpatialQueryResult>> spatialQuery(@RequestBody SpatialQueryRequest request) {
         List<SpatialQueryResult> result = this.service.geoNearQuery(request.getIri(), request.getRadius());
+        if (result.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "/lines")
+    public ResponseEntity<QueryHits<Line>> lineQuery(
+            @RequestParam(required = false) String documentId,
+            @RequestParam(required = false) Integer sectionSerial,
+            @RequestParam(required = false, name = "location") String locationName,
+            @RequestParam(required = false, name = "country") String countryName) {
+        if (locationName != null && countryName != null || locationName == null && countryName == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        QueryHits<Line> result = null;
+        if (locationName != null) {
+            result = this.service.linesForLocation(documentId, sectionSerial, locationName);
+        } else {
+            result = this.service.linesForCountry(documentId, sectionSerial, countryName);
+        }
+        if (result.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "/sections")
+    public ResponseEntity<QueryHits<Section>> sectionQuery(
+            @RequestParam(required = false) String documentId,
+            @RequestParam("location") String locationName) {
+        QueryHits<Section> result = this.service.sectionsForLocation(documentId, locationName);
+        if (result.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, path = "/sections/geo-near")
+    public ResponseEntity<List<SpatialQueryResult>> sectionSpatialQuery(@RequestBody SpatialQueryRequest request) {
+        List<SpatialQueryResult> result = this.service.sectionLocationVicinity(request.getIri(), request.getRadius());
+        if (result.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "/pages")
+    public ResponseEntity<List<Section>> pagesQuery(
+            @RequestParam(required = false) String documentId,
+            @RequestParam("location") String locationName) {
+        List<Section> result = this.service.pagesForLocation(documentId, locationName);
         if (result.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }

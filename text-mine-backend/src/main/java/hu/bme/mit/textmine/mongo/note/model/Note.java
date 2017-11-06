@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.index.TextIndexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 
@@ -18,7 +17,6 @@ import com.google.common.hash.Hashing;
 import com.querydsl.core.annotations.QueryEntity;
 
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
-import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,13 +34,19 @@ import lombok.Setter;
         @CompoundIndex(name = "doc_type_subtype", def = "{'document.$id' : 1, 'type' : 1, 'subType' : 1}"),
         @CompoundIndex(name = "doc_quote", def = "{'document.$id' : 1, 'quote' : 1}")
 })
+// @Slf4j
 public class Note extends BaseMongoEntity {
 
     private static final long serialVersionUID = -2197819671880549251L;
 
-    @DBRef(lazy = true)
+    // @DBRef(lazy = true)
     @NotNull(message = "Annotation must be linked to a document!")
-    private Document document;
+    private String documentId;
+
+    // public Document getDocument() {
+    // log.info("Getting note document!");
+    // return document;
+    // }
 
     @Indexed
     @NotNull(message = "Annotation must have a type!")
@@ -77,7 +81,7 @@ public class Note extends BaseMongoEntity {
 
     @Override
     public String getHash() {
-        return Hashing.sha256().hashString(String.join(";", this.document.getTitle(), this.document.getAuthor(),
+        return Hashing.sha256().hashString(String.join(";", this.documentId,
                 this.quote, this.content, this.type, this.subType), StandardCharsets.UTF_8).toString();
     }
 

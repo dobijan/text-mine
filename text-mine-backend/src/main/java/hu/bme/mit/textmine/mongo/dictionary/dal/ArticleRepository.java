@@ -2,17 +2,19 @@ package hu.bme.mit.textmine.mongo.dictionary.dal;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -27,10 +29,26 @@ import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
 import hu.bme.mit.textmine.mongo.dictionary.model.QArticle;
 import hu.bme.mit.textmine.mongo.document.model.Section;
 
+@Lazy
 public interface ArticleRepository
-        extends MongoRepository<Article, String>, CustomArticleRepository, QueryDslPredicateExecutor<Article> {
+        extends MongoRepository<Article, String>, CustomArticleRepository, QuerydslPredicateExecutor<Article> {
 
     public List<Article> findAll();
+
+    public default List<Article> findAllById(List<ObjectId> ids) {
+        List<Article> result = Lists.newArrayList();
+        this.findAll(new QArticle("article").id.in(ids)).forEach(result::add);
+        return result;
+    }
+
+    public default Article findOneByDocumentIdAndEntryWord(String documentId, String entryWord) {
+        Optional<Article> article = this.findOne(QArticle.article.entryWord.eq(entryWord)
+                .and(QArticle.article.document.id.eq(new ObjectId(documentId))));
+        if (article.isPresent()) {
+            return article.get();
+        }
+        return null;
+    }
 
     public default List<Article> findByDocumentId(ObjectId id) {
         List<Article> result = Lists.newArrayList();
@@ -52,8 +70,8 @@ public interface ArticleRepository
     }
 
     public default List<Article> findwithParams(String entryWord, String formVariant, String inflection,
-            PartOfSpeech partOfSpeech, List<String> documentIds, String corpusId, MatchingStrategy matchingStrategy,
-            Integer offset, Integer limit) {
+            List<PartOfSpeech> partOfSpeech, List<String> documentIds, String corpusId,
+            MatchingStrategy matchingStrategy, Integer offset, Integer limit) {
         List<Predicate> predicates = Lists.newArrayList();
         List<Predicate> stringPredicates = Lists.newArrayList(null, null, null);
         List<String> stringValues = Lists.newArrayList(entryWord, formVariant, inflection);
@@ -76,13 +94,13 @@ public interface ArticleRepository
         predicates.add(entryWord == null ? null : stringPredicates.get(0));
         predicates.add(formVariant == null ? null : stringPredicates.get(1));
         predicates.add(inflection == null ? null : stringPredicates.get(2));
-        predicates.add(partOfSpeech == null ? null : QArticle.article.partOfSpeech.contains(partOfSpeech));
+        predicates.add(partOfSpeech == null ? null : QArticle.article.partOfSpeech.any().in(partOfSpeech));
         predicates.add(corpusId == null ? null : QArticle.article.document.corpus.id.eq(new ObjectId(corpusId)));
         if (predicates.stream().allMatch(Objects::isNull)) {
             return this.findAll();
         }
         return this.findAll(ExpressionUtils.allOf(predicates),
-                new PageRequest(offset == null ? 0 : offset, limit == null ? 100 : limit)).getContent();
+                PageRequest.of(offset == null ? 0 : offset, limit == null ? 100 : limit)).getContent();
     }
 
     public List<Article> findByEntryWord(String entryWord);
@@ -95,7 +113,7 @@ public interface ArticleRepository
 
     public default List<Article> findByPartOfSpeech(PartOfSpeech pos) {
         List<Article> articles = Lists.newArrayList();
-        this.findAll(QArticle.article.partOfSpeech.contains(pos)).forEach(articles::add);
+        this.findAll(QArticle.article.partOfSpeech.any().eq(pos)).forEach(articles::add);
         return articles;
     }
 
