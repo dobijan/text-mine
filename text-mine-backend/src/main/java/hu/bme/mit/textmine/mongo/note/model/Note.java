@@ -89,4 +89,16 @@ public class Note extends BaseMongoEntity {
     public String getResourcePostfix(TextMineVocabularyService vocabulary) {
         return vocabulary.getNoteResourcePostfix();
     }
+
+    public static Note from(NoteDTO dto) {
+        return Note.builder()
+                .content(dto.getContent())
+                .documentId(dto.getDocumentId())
+                .lineRefs(dto.getLineRefs())
+                .quote(dto.getQuote())
+                .section(dto.getSection())
+                .subType(dto.getSubType())
+                .type(dto.getType())
+                .build();
+    }
 }

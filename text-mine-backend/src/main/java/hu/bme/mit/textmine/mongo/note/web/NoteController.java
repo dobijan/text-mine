@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 import hu.bme.mit.textmine.mongo.note.model.Note;
+import hu.bme.mit.textmine.mongo.note.model.NoteDTO;
 import hu.bme.mit.textmine.mongo.note.model.NoteFileDTO;
 import hu.bme.mit.textmine.mongo.note.service.NoteService;
 
@@ -61,7 +62,7 @@ public class NoteController {
         return new ResponseEntity<>(notes, HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, path = "/multiple")
     public ResponseEntity<List<Note>> postFile(MultipartHttpServletRequest request) throws IOException {
         String documentId = request.getParameter("documentId");
         MultipartFile file = request.getFile("file");
@@ -73,7 +74,20 @@ public class NoteController {
         }
         List<Note> result = this.noteService
                 .createNotes(NoteFileDTO.builder().documentId(documentId).file(file).build());
-        return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(result, HttpStatus.CREATED);
+    }
+
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<Note> postOne(@RequestBody NoteDTO note) throws IOException {
+        if (Stream.of(note.getDocumentId(), note.getSection(), note.getQuote(), note.getContent())
+                .anyMatch(Objects::isNull)) {
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        }
+        if (!this.documentService.exists(note.getDocumentId())) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        Note result = this.noteService.createNote(note);
+        return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = "/{id}")

@@ -1,25 +1,31 @@
 package hu.bme.mit.textmine.mongo.note.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
+import java.util.Set;
 
-@XmlRootElement(name = "note")
-@XmlAccessorType(XmlAccessType.FIELD)
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class NoteDTO {
-    
-    @XmlElement(name = "quote")
-    public String quote;
-    
-    @XmlAttribute
-    public String type;
-    
-    @XmlAttribute
-    public String subType;
-    
-    @XmlValue
-    public String content;
+
+    private String quote;
+
+    private String type;
+
+    private String subType;
+
+    private String content;
+
+    private Integer section;
+
+    private Set<Integer> lineRefs;
+
+    private String documentId;
 }

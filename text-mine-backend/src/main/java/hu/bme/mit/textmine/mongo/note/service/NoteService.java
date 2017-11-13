@@ -36,6 +36,7 @@ import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 import hu.bme.mit.textmine.mongo.note.dal.NoteRepository;
 import hu.bme.mit.textmine.mongo.note.model.Note;
+import hu.bme.mit.textmine.mongo.note.model.NoteDTO;
 import hu.bme.mit.textmine.mongo.note.model.NoteFileDTO;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import hu.bme.mit.textmine.solr.dal.note.SolrNoteRepository;
@@ -130,6 +131,12 @@ public class NoteService {
         }
         this.solrNoteRepository.saveAll(solrNotes);
         return notes;
+    }
+
+    public Note createNote(NoteDTO dto) {
+        Note note = Note.from(dto);
+        note = this.repository.save(note);
+        return note;
     }
 
     public Note updateNote(Note note) {
