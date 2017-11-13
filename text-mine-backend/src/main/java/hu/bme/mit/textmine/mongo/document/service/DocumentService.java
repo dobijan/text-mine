@@ -246,7 +246,6 @@ public class DocumentService {
         return this.repository.getSectionLinesBySerial(documentId, sectionNumber, lineNumbers);
     }
 
-    @SuppressWarnings("unchecked")
     public QueryHits<Line> lineRegexQuery(String documentId, Integer sectionNumber, String word, List<String> phrases,
             boolean exact) {
         if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
@@ -270,6 +269,7 @@ public class DocumentService {
                                     return note.getLineRefs();
                                 }
                             }).flatMap(List::stream)
+                                    .map(o -> (long) o)
                                     .collect(Collectors.toList()))))
                     .build();
         }

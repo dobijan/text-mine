@@ -22,10 +22,10 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.ColumnPositionMappingStrategy;
+import com.opencsv.bean.CsvToBean;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
-import au.com.bytecode.opencsv.bean.CsvToBean;
 import hu.bme.mit.textmine.mongo.core.SearchStrategy;
 import hu.bme.mit.textmine.mongo.dictionary.dal.ArticleRepository;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
@@ -466,6 +466,7 @@ public class ArticleService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private List<PartOfSpeechCsvBean> parseCsvToPos(String content) {
         CsvToBean<PartOfSpeechCsvBean> processor = new CsvToBean<>();
         ColumnPositionMappingStrategy<PartOfSpeechCsvBean> mappingStrategy = new ColumnPositionMappingStrategy<>();

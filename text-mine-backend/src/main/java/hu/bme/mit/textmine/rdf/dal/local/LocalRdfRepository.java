@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryResults;
 import org.eclipse.rdf4j.query.algebra.Compare.CompareOp;
 import org.eclipse.rdf4j.query.parser.ParsedQuery;
@@ -26,6 +27,7 @@ import org.eclipse.rdf4j.repository.util.Repositories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import org.zalando.fauxpas.FauxPas;
 
 import hu.bme.mit.textmine.rdf.model.SpatialQueryResult;
 import hu.bme.mit.textmine.rdf.model.Triple;
@@ -131,10 +133,11 @@ public class LocalRdfRepository {
                 + "BIND( geof:distance(?wktCenter, ?wktPoint, uom:metre) as ?distance) "
                 + "FILTER ( !sameTerm(?location, <" + vf.createIRI(iri) + ">) && ?distance <= " + radiusInMeters
                 + ") } " + "GROUP BY ?location " + "ORDER BY ?maxDist";
-        Repositories.tupleQuery(this.repository, q, QueryResults::asList).forEach(bindingSet -> {
+        for (BindingSet bindingSet : Repositories.tupleQuery(this.repository, q,
+                FauxPas.throwingFunction(QueryResults::asList))) {
             String geoNearCoordinates = bindingSet.getValue("coords").stringValue();
             if (geoNearCoordinates.equals("")) {
-                return;
+                continue;
             }
             String geoNearIri = bindingSet.getValue("location").stringValue();
             String geoNearDistance = bindingSet.getValue("maxDist").stringValue();
@@ -145,7 +148,7 @@ public class LocalRdfRepository {
                         .longitude(Double.parseDouble(geoPointMatcher.group(1)))
                         .latitude(Double.parseDouble(geoPointMatcher.group(2))).build());
             }
-        });
+        }
         return results;
     }
 
@@ -163,7 +166,7 @@ public class LocalRdfRepository {
                 "    {?s <" + this.vocabulary.sameResourceRelation() + "> ?s2 . " +
                 "     ?s2 rdfs:label \"" + name + "\" . } . " +
                 "}";
-        Repositories.tupleQuery(this.repository, q, QueryResults::asList)
+        Repositories.tupleQuery(this.repository, q, FauxPas.throwingFunction(QueryResults::asList))
                 .forEach(bindingSet -> results.add(bindingSet.getValue("s").toString()));
         return results;
     }
@@ -181,9 +184,10 @@ public class LocalRdfRepository {
                 "  VALUES ?iri { " + iriCondition + " } " +
                 "  ?s <" + relationType + "> ?iri . " +
                 "}";
-        Repositories.tupleQuery(this.repository, q, QueryResults::asList).forEach(bindingSet -> {
-            result.add(bindingSet.getValue("s").stringValue());
-        });
+        Repositories.tupleQuery(this.repository, q, FauxPas.throwingFunction(QueryResults::asList))
+                .forEach(bindingSet -> {
+                    result.add(bindingSet.getValue("s").stringValue());
+                });
         return result;
     }
 
@@ -193,9 +197,11 @@ public class LocalRdfRepository {
         ParsedQuery q = QueryBuilderFactory.select("object").group()
                 .atom(vf.createIRI(iri), RDF.TYPE, vf.createIRI(entityType)).closeGroup().group()
                 .atom(vf.createIRI(iri), vf.createIRI(relationType), "object").closeGroup().query();
-        Repositories.tupleQuery(this.repository, this.renderer.render(q), QueryResults::asList).forEach(bindingSet -> {
-            result.add(bindingSet.getValue("object").stringValue());
-        });
+        Repositories
+                .tupleQuery(this.repository, this.renderer.render(q), FauxPas.throwingFunction(QueryResults::asList))
+                .forEach(bindingSet -> {
+                    result.add(bindingSet.getValue("object").stringValue());
+                });
         return result;
     }
 
@@ -214,7 +220,9 @@ public class LocalRdfRepository {
                         .closeGroup();
             }
         }
-        Repositories.tupleQuery(this.repository, this.renderer.render(qb.query()), QueryResults::asList)
+        Repositories
+                .tupleQuery(this.repository, this.renderer.render(qb.query()),
+                        FauxPas.throwingFunction(QueryResults::asList))
                 .forEach(bindingSet -> {
                     result.add(bindingSet.getValue(varName).stringValue());
                 });
