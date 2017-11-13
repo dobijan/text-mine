@@ -1,7 +1,6 @@
 package hu.bme.mit.textmine.rdf.service;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -17,9 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.opencsv.CSVWriter;
-import com.opencsv.bean.BeanToCsv;
-import com.opencsv.bean.ColumnPositionMappingStrategy;
 
 import hu.bme.mit.textmine.mongo.core.RdfEntity;
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
@@ -203,7 +199,6 @@ public abstract class RdfResourceService {
         return this.noteService.getNotesByIriAndDocumentId(documentId, noteIris);
     }
 
-    @SuppressWarnings("deprecation")
     @SneakyThrows(IOException.class)
     public String queryResources(MultipartFile file) {
 
@@ -301,13 +296,14 @@ public abstract class RdfResourceService {
                 + (double) (resourceSets.length - missing) / (double) resourceSets.length * 100 + "%");
 
         // generate csv response
-        try (StringWriter sw = new StringWriter(); CSVWriter writer = new CSVWriter(sw, ';')) {
-            BeanToCsv<EntityLinkCSVBean> btc = new BeanToCsv<>();
-            ColumnPositionMappingStrategy<EntityLinkCSVBean> strategy = new ColumnPositionMappingStrategy<>();
-            strategy.setType(EntityLinkCSVBean.class);
-            strategy.setColumnMapping("entity", "link");
-            btc.write(strategy, writer, links);
-            return sw.toString();
-        }
+        // try (StringWriter sw = new StringWriter(); CSVWriter writer = new CSVWriter(sw, ';')) {
+        // BeanToCsv<EntityLinkCSVBean> btc = new BeanToCsv<>();
+        // ColumnPositionMappingStrategy<EntityLinkCSVBean> strategy = new ColumnPositionMappingStrategy<>();
+        // strategy.setType(EntityLinkCSVBean.class);
+        // strategy.setColumnMapping("entity", "link");
+        // btc.write(strategy, writer, links);
+        // return sw.toString();
+        // }
+        return "OK";
     }
 }

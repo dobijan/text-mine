@@ -40,11 +40,18 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.5</version>
 		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>net.sf.opencsv</groupId> -->
+		<!-- <artifactId>opencsv</artifactId> -->
+		<!-- <version>2.3</version> -->
+		<!-- </dependency> -->
 		<dependency>
-			<groupId>net.sf.opencsv</groupId>
+			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
-			<version>2.3</version>
+			<version>4.0</version>
 		</dependency>
+
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
@@ -55,19 +62,11 @@
 		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-integration</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jooq</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -90,11 +89,6 @@
 			<artifactId>slf4j-log4j12</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
@@ -115,6 +109,13 @@
 			<artifactId>rdf4j-runtime</artifactId>
 			<version>2.2.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.rdf4j</groupId>
+			<artifactId>rdf4j-queryrender</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.eclipse.rdf4j</groupId>
@@ -166,6 +167,12 @@
 			<groupId>org.webjars</groupId>
 			<artifactId>bootstrap</artifactId>
 			<version>3.3.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>faux-pas</artifactId>
+			<version>0.5.0</version>
 		</dependency>
 
 	</dependencies>
