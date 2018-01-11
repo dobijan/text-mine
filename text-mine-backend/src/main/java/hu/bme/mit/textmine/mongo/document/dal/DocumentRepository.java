@@ -89,7 +89,7 @@ public interface DocumentRepository
                             return true;
                         }
                     })
-                    .map(a -> a.getDocument().getId())
+                    .map(a -> new ObjectId(a.getDocumentId()))
                     .collect(Collectors.toList());
             if (allowedIds == null) {
                 allowedIds = articleRelatedDocIds;
@@ -98,7 +98,7 @@ public interface DocumentRepository
             }
         } else if (partsOfSpeech != null) {
             List<ObjectId> articleRelatedDocIds = this.getArticlesByPartsOfSpeech(partsOfSpeech).stream()
-                    .map(a -> a.getDocument().getId())
+                    .map(a -> new ObjectId(a.getDocumentId()))
                     .collect(Collectors.toList());
             if (allowedIds == null) {
                 allowedIds = articleRelatedDocIds;

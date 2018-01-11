@@ -1,0 +1,2178 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "text-mine",
+    "version" : "v1",
+    "title" : "text-mine-api"
+  },
+  "host" : "localhost:8080",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "articles"
+  }, {
+    "name" : "corpora"
+  }, {
+    "name" : "documents"
+  }, {
+    "name" : "locations"
+  }, {
+    "name" : "notes"
+  }, {
+    "name" : "persons"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/articles" : {
+      "get" : {
+        "tags" : [ "articles" ],
+        "summary" : "Get filtered articles",
+        "description" : "",
+        "operationId" : "getFiltered",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "entryWord",
+          "in" : "query",
+          "description" : "Entry word",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "formVariant",
+          "in" : "query",
+          "description" : "Form variant",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "inflection",
+          "in" : "query",
+          "description" : "Inflection",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document ids",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "corpusId",
+          "in" : "query",
+          "description" : "Corpus id",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "matchingStrategy",
+          "in" : "query",
+          "description" : "Matching strategy",
+          "required" : false,
+          "type" : "string",
+          "enum" : [ "STARTS_WITH", "ENDS_WITH", "CONTAINS", "EXACT_MATCH" ]
+        }, {
+          "name" : "offset",
+          "in" : "query",
+          "description" : "Offset",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/ArticleDTO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/by-document/{documentId}" : {
+      "get" : {
+        "tags" : [ "articles" ],
+        "summary" : "Get articles of a document",
+        "description" : "",
+        "operationId" : "getByDocument",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "path",
+          "description" : "Document Id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "section",
+          "in" : "query",
+          "description" : "Section number",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Page number",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/ArticleDTO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/group/by-document" : {
+      "get" : {
+        "tags" : [ "articles" ],
+        "summary" : "Get articles grouped by document id",
+        "description" : "",
+        "operationId" : "groupByDocument",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "entryWord",
+          "in" : "query",
+          "description" : "Entry word",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "formVariant",
+          "in" : "query",
+          "description" : "Form variant",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "inflection",
+          "in" : "query",
+          "description" : "Inflection",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "corpusId",
+          "in" : "query",
+          "description" : "Corpus Id",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "matchingStrategy",
+          "in" : "query",
+          "description" : "Matching strategy",
+          "required" : false,
+          "type" : "string",
+          "enum" : [ "STARTS_WITH", "ENDS_WITH", "CONTAINS", "EXACT_MATCH" ]
+        }, {
+          "name" : "posCount",
+          "in" : "query",
+          "description" : "Part of speech count",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/definitions/ArticleDTOList"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/{id}" : {
+      "get" : {
+        "tags" : [ "articles" ],
+        "summary" : "Get article by Id",
+        "description" : "",
+        "operationId" : "getOne",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Article Id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/ArticleDTO"
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "articles" ],
+        "summary" : "Update article",
+        "description" : "",
+        "operationId" : "putArticle",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Article",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Article"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Article id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/ArticleDTO"
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "articles" ],
+        "summary" : "Delete article",
+        "description" : "",
+        "operationId" : "deleteArticle",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Article Id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    },
+    "/corpora" : {
+      "get" : {
+        "tags" : [ "corpora" ],
+        "summary" : "Get corpora",
+        "description" : "",
+        "operationId" : "getAll",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Corpus"
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "corpora" ],
+        "summary" : "Create corpus",
+        "description" : "",
+        "operationId" : "post",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Corpus",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Corpus"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Corpus"
+            }
+          }
+        }
+      }
+    },
+    "/corpora/{id}" : {
+      "get" : {
+        "tags" : [ "corpora" ],
+        "summary" : "Get corpus by id",
+        "description" : "",
+        "operationId" : "getOne",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Id of corpus",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Corpus"
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "corpora" ],
+        "summary" : "Update corpus",
+        "description" : "",
+        "operationId" : "put",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Corpus",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Corpus"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Corpus id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Corpus"
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "corpora" ],
+        "summary" : "Delete corpus",
+        "description" : "",
+        "operationId" : "delete",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Corpus id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    },
+    "/documents" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get filtered documents",
+        "description" : "",
+        "operationId" : "getFiltered",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "entryText",
+          "in" : "query",
+          "description" : "Entry text",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "entryWord",
+          "in" : "query",
+          "description" : "Entry words",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document ids",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "offset",
+          "in" : "query",
+          "description" : "Offset",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Document"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/attachment/{attachmentId}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get attachment by id",
+        "description" : "",
+        "operationId" : "getFile",
+        "produces" : [ "application/octet-stream" ],
+        "parameters" : [ {
+          "name" : "attachmentId",
+          "in" : "path",
+          "description" : "Attachment id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string",
+                "format" : "byte"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/by-corpus/{id}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get document by corpus id",
+        "description" : "",
+        "operationId" : "getByCorpus",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Corpus Id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Document"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/pages/{id}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get filtered sections",
+        "description" : "",
+        "operationId" : "getFilteredPages",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document Id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "phrase",
+          "in" : "query",
+          "description" : "Phrases",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "slop",
+          "in" : "query",
+          "description" : "Sloppy distance",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "disjoint",
+          "in" : "query",
+          "description" : "Collections are ALL or ANY?",
+          "required" : false,
+          "type" : "boolean"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/SectionHits"
+            }
+          }
+        }
+      }
+    },
+    "/documents/pages/{id}/pos/shingle/stats" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get page PartOfSpeech shingle statistics",
+        "description" : "",
+        "operationId" : "getPagePosShingleStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : true,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PosShingleEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/pages/{id}/shingle/stats" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get page shingle statistics",
+        "description" : "",
+        "operationId" : "getPageShingleStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PosShingleEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/pos/shingle/stats" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get PartOfSpeech shingle statistics",
+        "description" : "",
+        "operationId" : "getPosShingleStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : true,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PosShingleEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/pos/stats/{id}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get PartOfSpeech statistics",
+        "description" : "",
+        "operationId" : "getPosStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PartOfSpeechStatistics"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/reindex/{id}" : {
+      "post" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get page PartOfSpeech shingle statistics",
+        "description" : "",
+        "operationId" : "reindex",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Document"
+            }
+          }
+        }
+      }
+    },
+    "/documents/sections/{id}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get filtered sections",
+        "description" : "",
+        "operationId" : "getFilteredSections",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document Id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "phrase",
+          "in" : "query",
+          "description" : "Phrases",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "slop",
+          "in" : "query",
+          "description" : "Sloppy distance",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "disjoint",
+          "in" : "query",
+          "description" : "Collections are ALL or ANY?",
+          "required" : false,
+          "type" : "boolean"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/SectionHits"
+            }
+          }
+        }
+      }
+    },
+    "/documents/sections/{id}/lines/{serial}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get filtered lines of section",
+        "description" : "",
+        "operationId" : "getFilteredLines",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "serial",
+          "in" : "path",
+          "description" : "Section number",
+          "required" : true,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "phrase",
+          "in" : "query",
+          "description" : "Phrases",
+          "required" : false,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/LineHits"
+            }
+          }
+        }
+      }
+    },
+    "/documents/sections/{id}/pos/shingle/stats" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get section PartOfSpeech shingle statistics",
+        "description" : "",
+        "operationId" : "getSectionPosShingleStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "pos",
+          "in" : "query",
+          "description" : "Parts of speech",
+          "required" : true,
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "collectionFormat" : "multi"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PosShingleEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/sections/{id}/shingle/stats" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get section shingle statistics",
+        "description" : "",
+        "operationId" : "getSectionShingleStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PosShingleEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/shingle/stats" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get shingle statistics",
+        "description" : "",
+        "operationId" : "getShingleStats",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Limit",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/PosShingleEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}" : {
+      "get" : {
+        "tags" : [ "documents" ],
+        "summary" : "Get document by Id",
+        "description" : "",
+        "operationId" : "getOne",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document Id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Document"
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "documents" ],
+        "summary" : "Update document by id",
+        "description" : "",
+        "operationId" : "put",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Document",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Document"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Document"
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "documents" ],
+        "summary" : "Delete document by id",
+        "description" : "",
+        "operationId" : "delete",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}/attachments" : {
+      "delete" : {
+        "tags" : [ "documents" ],
+        "summary" : "Delete document by id",
+        "description" : "",
+        "operationId" : "deleteAttachments",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}/normalize" : {
+      "post" : {
+        "tags" : [ "documents" ],
+        "summary" : "Normalize document by id",
+        "description" : "",
+        "operationId" : "normalize",
+        "produces" : [ "text/plain" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    },
+    "/locations/exists" : {
+      "get" : {
+        "tags" : [ "locations" ],
+        "summary" : "Check if location exists",
+        "description" : "",
+        "operationId" : "exists",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "query",
+          "description" : "Location name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/locations/geo-near" : {
+      "post" : {
+        "tags" : [ "locations" ],
+        "summary" : "Get locations in vicinity of IRI",
+        "description" : "",
+        "operationId" : "spatialQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Spatial request",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/SpatialQueryRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/SpatialQueryResult"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/lines" : {
+      "get" : {
+        "tags" : [ "locations" ],
+        "summary" : "Get lines in connection with a Country or Location",
+        "description" : "",
+        "operationId" : "lineQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document id",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "sectionSerial",
+          "in" : "query",
+          "description" : "Section number",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "location",
+          "in" : "query",
+          "description" : "Location name",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "description" : "Country name",
+          "required" : false,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/LineHits"
+            }
+          }
+        }
+      }
+    },
+    "/locations/pages" : {
+      "get" : {
+        "tags" : [ "locations" ],
+        "summary" : "Get pages in connection with a Location",
+        "description" : "",
+        "operationId" : "pagesQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "location",
+          "in" : "query",
+          "description" : "Location name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Section"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/sections" : {
+      "get" : {
+        "tags" : [ "locations" ],
+        "summary" : "Get sections in connection with a Location",
+        "description" : "",
+        "operationId" : "sectionQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document id",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "location",
+          "in" : "query",
+          "description" : "Location name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/SectionHits"
+            }
+          }
+        }
+      }
+    },
+    "/locations/sections/geo-near" : {
+      "post" : {
+        "tags" : [ "locations" ],
+        "summary" : "Get sections in connection with a Location",
+        "description" : "",
+        "operationId" : "sectionSpatialQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Spatial request",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/SpatialQueryRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/SpatialQueryResult"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes" : {
+      "get" : {
+        "tags" : [ "notes" ],
+        "summary" : "Get all notes",
+        "description" : "",
+        "operationId" : "getAll",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Note"
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "notes" ],
+        "summary" : "Post a note",
+        "description" : "",
+        "operationId" : "postOne",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Note",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/NoteDTO"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Note"
+            }
+          }
+        }
+      }
+    },
+    "/notes/by-document/{id}" : {
+      "get" : {
+        "tags" : [ "notes" ],
+        "summary" : "Get note by document id",
+        "description" : "",
+        "operationId" : "getByDocument",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Note"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/{id}" : {
+      "get" : {
+        "tags" : [ "notes" ],
+        "summary" : "Get note by id",
+        "description" : "",
+        "operationId" : "getOne",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Note id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Note"
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "notes" ],
+        "summary" : "Update a note",
+        "description" : "",
+        "operationId" : "put",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Note",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Note"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Note id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Note"
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "notes" ],
+        "summary" : "Delete a note",
+        "description" : "",
+        "operationId" : "delete",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Note id",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    },
+    "/persons/exists" : {
+      "get" : {
+        "tags" : [ "persons" ],
+        "summary" : "Check if person exists",
+        "description" : "",
+        "operationId" : "exists",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "query",
+          "description" : "Person name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/persons/lines" : {
+      "get" : {
+        "tags" : [ "persons" ],
+        "summary" : "Get lines in connection with a Person",
+        "description" : "",
+        "operationId" : "lineQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document id",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "sectionSerial",
+          "in" : "query",
+          "description" : "Section number",
+          "required" : false,
+          "type" : "integer",
+          "format" : "int32"
+        }, {
+          "name" : "person",
+          "in" : "query",
+          "description" : "Person name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/LineHits"
+            }
+          }
+        }
+      }
+    },
+    "/persons/pages" : {
+      "get" : {
+        "tags" : [ "persons" ],
+        "summary" : "Get pages in connection with a Person",
+        "description" : "",
+        "operationId" : "pagesQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document id",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "person",
+          "in" : "query",
+          "description" : "Person name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Section"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/sections" : {
+      "get" : {
+        "tags" : [ "persons" ],
+        "summary" : "Get sections in connection with a Person",
+        "description" : "",
+        "operationId" : "sectionQuery",
+        "produces" : [ "application/json;charset=UTF-8" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "query",
+          "description" : "Document id",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "person",
+          "in" : "query",
+          "description" : "Person name",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/SectionHits"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "Article" : {
+      "type" : "object",
+      "required" : [ "derivative", "document", "entryWord", "iri", "properNoun" ],
+      "properties" : {
+        "document" : {
+          "$ref" : "#/definitions/Document"
+        },
+        "entryWord" : {
+          "type" : "string"
+        },
+        "properNoun" : {
+          "type" : "boolean"
+        },
+        "derivative" : {
+          "type" : "boolean"
+        },
+        "editorNote" : {
+          "type" : "string"
+        },
+        "meaning" : {
+          "type" : "string"
+        },
+        "partOfSpeech" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "enum" : [ "PRONOMINAL_ADVERB", "PRONOUN", "NOUN", "INFINITIVE", "ADVERBIAL_PARTICIPLE", "ARTICLE", "ADVERB", "NUMERAL", "VERB", "VERB_PARTICIPLE", "PREVERB", "INTERJECTION", "CONJUNCTIVE", "ADJECTIVE", "PARTICIPLE", "MODIFIER", "SENTENTIAL", "POSTPOSITION", "POSTPOSITIONAL_ADJECTIVE", "PARTICLE", "AUXILIARY" ]
+          }
+        },
+        "externalReferences" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "internalReferences" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "formVariants" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/FormVariant"
+          }
+        },
+        "score" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "iri" : {
+          "type" : "string"
+        },
+        "id" : {
+          "$ref" : "#/definitions/ObjectId"
+        },
+        "version" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "createdDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "lastModifiedDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "createdBy" : {
+          "type" : "string"
+        },
+        "lastModifiedBy" : {
+          "type" : "string"
+        },
+        "hash" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ArticleDTO" : {
+      "type" : "object",
+      "properties" : {
+        "documentId" : {
+          "type" : "string"
+        },
+        "entryWord" : {
+          "type" : "string"
+        },
+        "properNoun" : {
+          "type" : "boolean"
+        },
+        "derivative" : {
+          "type" : "boolean"
+        },
+        "editorNote" : {
+          "type" : "string"
+        },
+        "meaning" : {
+          "type" : "string"
+        },
+        "partOfSpeech" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "enum" : [ "PRONOMINAL_ADVERB", "PRONOUN", "NOUN", "INFINITIVE", "ADVERBIAL_PARTICIPLE", "ARTICLE", "ADVERB", "NUMERAL", "VERB", "VERB_PARTICIPLE", "PREVERB", "INTERJECTION", "CONJUNCTIVE", "ADJECTIVE", "PARTICIPLE", "MODIFIER", "SENTENTIAL", "POSTPOSITION", "POSTPOSITIONAL_ADJECTIVE", "PARTICLE", "AUXILIARY" ]
+          }
+        },
+        "externalReferences" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "internalReferences" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "formVariants" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/FormVariant"
+          }
+        },
+        "id" : {
+          "$ref" : "#/definitions/ObjectId"
+        },
+        "version" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "createdDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "lastModifiedDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "createdBy" : {
+          "type" : "string"
+        },
+        "lastModifiedBy" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ArticleDTOList" : {
+      "type" : "object",
+      "properties" : {
+        "size" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "rangeFrom" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "rangeSize" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "entries" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ArticleDTO"
+          }
+        }
+      }
+    },
+    "Corpus" : {
+      "type" : "object",
+      "required" : [ "description", "iri", "title" ],
+      "properties" : {
+        "iri" : {
+          "type" : "string"
+        },
+        "id" : {
+          "$ref" : "#/definitions/ObjectId"
+        },
+        "version" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "createdDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "lastModifiedDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "createdBy" : {
+          "type" : "string"
+        },
+        "lastModifiedBy" : {
+          "type" : "string"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "hash" : {
+          "type" : "string"
+        }
+      }
+    },
+    "Document" : {
+      "type" : "object",
+      "required" : [ "attachmentIds", "author", "content", "corpus", "iri", "pages", "sections", "title" ],
+      "properties" : {
+        "corpus" : {
+          "$ref" : "#/definitions/Corpus"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "content" : {
+          "type" : "string"
+        },
+        "normalized" : {
+          "type" : "string"
+        },
+        "author" : {
+          "type" : "string"
+        },
+        "sections" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Section"
+          }
+        },
+        "pages" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Section"
+          }
+        },
+        "attachmentIds" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "score" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "iri" : {
+          "type" : "string"
+        },
+        "id" : {
+          "$ref" : "#/definitions/ObjectId"
+        },
+        "version" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "createdDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "lastModifiedDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "createdBy" : {
+          "type" : "string"
+        },
+        "lastModifiedBy" : {
+          "type" : "string"
+        },
+        "hash" : {
+          "type" : "string"
+        }
+      }
+    },
+    "EntryExample" : {
+      "type" : "object",
+      "properties" : {
+        "exampleSentence" : {
+          "type" : "string"
+        },
+        "page" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    },
+    "FormVariant" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "inflections" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Inflection"
+          }
+        }
+      }
+    },
+    "Inflection" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "occurrences" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "examples" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/EntryExample"
+          }
+        }
+      }
+    },
+    "Line" : {
+      "type" : "object",
+      "required" : [ "iri" ],
+      "properties" : {
+        "serial" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "content" : {
+          "type" : "string"
+        },
+        "iri" : {
+          "type" : "string"
+        },
+        "hash" : {
+          "type" : "string"
+        }
+      }
+    },
+    "LineHits" : {
+      "type" : "object",
+      "properties" : {
+        "baseHits" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "$ref" : "#/definitions/Line"
+          }
+        },
+        "noteHits" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "$ref" : "#/definitions/Line"
+          }
+        },
+        "empty" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "Note" : {
+      "type" : "object",
+      "required" : [ "content", "documentId", "iri", "lineRefs", "quote", "section", "subType", "type" ],
+      "properties" : {
+        "documentId" : {
+          "type" : "string"
+        },
+        "type" : {
+          "type" : "string"
+        },
+        "subType" : {
+          "type" : "string"
+        },
+        "quote" : {
+          "type" : "string"
+        },
+        "lineRefs" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "section" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "content" : {
+          "type" : "string"
+        },
+        "score" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "iri" : {
+          "type" : "string"
+        },
+        "id" : {
+          "$ref" : "#/definitions/ObjectId"
+        },
+        "version" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "createdDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "lastModifiedDate" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "createdBy" : {
+          "type" : "string"
+        },
+        "lastModifiedBy" : {
+          "type" : "string"
+        },
+        "hash" : {
+          "type" : "string"
+        }
+      }
+    },
+    "NoteDTO" : {
+      "type" : "object",
+      "properties" : {
+        "quote" : {
+          "type" : "string"
+        },
+        "type" : {
+          "type" : "string"
+        },
+        "subType" : {
+          "type" : "string"
+        },
+        "content" : {
+          "type" : "string"
+        },
+        "section" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "lineRefs" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "documentId" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ObjectId" : {
+      "type" : "object",
+      "properties" : {
+        "timestamp" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "machineIdentifier" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "processIdentifier" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "counter" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "time" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "date" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "timeSecond" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    },
+    "PartOfSpeechStatistics" : {
+      "type" : "object",
+      "properties" : {
+        "documentId" : {
+          "type" : "string"
+        },
+        "count" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "proportions" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      }
+    },
+    "PosShingleEntry" : {
+      "type" : "object",
+      "properties" : {
+        "value" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "key" : {
+          "type" : "string"
+        }
+      }
+    },
+    "Section" : {
+      "type" : "object",
+      "required" : [ "iri" ],
+      "properties" : {
+        "serial" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "content" : {
+          "type" : "string"
+        },
+        "normalized" : {
+          "type" : "string"
+        },
+        "lines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Line"
+          }
+        },
+        "iri" : {
+          "type" : "string"
+        },
+        "hash" : {
+          "type" : "string"
+        }
+      }
+    },
+    "SectionHits" : {
+      "type" : "object",
+      "properties" : {
+        "baseHits" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "$ref" : "#/definitions/Section"
+          }
+        },
+        "noteHits" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "$ref" : "#/definitions/Section"
+          }
+        },
+        "empty" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "SpatialQueryRequest" : {
+      "type" : "object",
+      "properties" : {
+        "iri" : {
+          "type" : "string"
+        },
+        "radius" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    },
+    "SpatialQueryResult" : {
+      "type" : "object",
+      "properties" : {
+        "from" : {
+          "type" : "string"
+        },
+        "radius" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "iri" : {
+          "type" : "string"
+        },
+        "distanceInMeters" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "latitude" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "longitude" : {
+          "type" : "number",
+          "format" : "double"
+        }
+      }
+    }
+  }
+}

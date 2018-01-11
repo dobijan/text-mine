@@ -23,7 +23,11 @@ import hu.bme.mit.textmine.mongo.note.model.Note;
 import hu.bme.mit.textmine.mongo.note.model.NoteDTO;
 import hu.bme.mit.textmine.mongo.note.model.NoteFileDTO;
 import hu.bme.mit.textmine.mongo.note.service.NoteService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
+@Api(value = "/notes")
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/notes")
 public class NoteController {
@@ -35,6 +39,11 @@ public class NoteController {
     @Lazy
     private DocumentService documentService;
 
+    @ApiOperation(
+            value = "Get all notes",
+            httpMethod = "GET",
+            response = Note.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Note>> getAll() {
         List<Note> notes = this.noteService.getAllNotes();
@@ -44,8 +53,12 @@ public class NoteController {
         return new ResponseEntity<>(notes, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get note by id",
+            httpMethod = "GET",
+            response = Note.class)
     @RequestMapping(method = RequestMethod.GET, path = "/{id}")
-    public ResponseEntity<Note> getOne(@PathVariable("id") String id) {
+    public ResponseEntity<Note> getOne(@ApiParam(value = "Note id", required = true) @PathVariable("id") String id) {
         Note note = this.noteService.getNote(id);
         if (note == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -53,8 +66,14 @@ public class NoteController {
         return new ResponseEntity<>(note, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get note by document id",
+            httpMethod = "GET",
+            response = Note.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/by-document/{id}")
-    public ResponseEntity<List<Note>> getByDocument(@PathVariable("id") String id) {
+    public ResponseEntity<List<Note>> getByDocument(
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         List<Note> notes = this.noteService.getNotesByDocument(id);
         if (notes == null || notes.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -77,8 +96,13 @@ public class NoteController {
         return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
+    @ApiOperation(
+            value = "Post a note",
+            httpMethod = "POST",
+            response = Note.class)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Note> postOne(@RequestBody NoteDTO note) throws IOException {
+    public ResponseEntity<Note> postOne(@ApiParam(value = "Note", required = true) @RequestBody NoteDTO note)
+            throws IOException {
         if (Stream.of(note.getDocumentId(), note.getSection(), note.getQuote(), note.getContent())
                 .anyMatch(Objects::isNull)) {
             return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
@@ -90,8 +114,13 @@ public class NoteController {
         return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
+    @ApiOperation(
+            value = "Update a note",
+            httpMethod = "PUT",
+            response = Note.class)
     @RequestMapping(method = RequestMethod.PUT, path = "/{id}")
-    public ResponseEntity<Note> put(@RequestBody Note note, @PathVariable("id") String id) {
+    public ResponseEntity<Note> put(@ApiParam(value = "Note", required = true) @RequestBody Note note,
+            @ApiParam(value = "Note id", required = true) @PathVariable("id") String id) {
         Note oldNote = this.noteService.getNote(id);
         if (oldNote == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -100,8 +129,12 @@ public class NoteController {
         return new ResponseEntity<>(newNote, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Delete a note",
+            httpMethod = "DELETE",
+            response = String.class)
     @RequestMapping(method = RequestMethod.DELETE, path = "/{id}")
-    public ResponseEntity<String> delete(@PathVariable("id") String id) {
+    public ResponseEntity<String> delete(@ApiParam(value = "Note id", required = true) @PathVariable("id") String id) {
         Note note = this.noteService.getNote(id);
         if (note == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

@@ -1,0 +1,32 @@
+h1 {
+    margin-left: 10px;
+}
+
+mat-card {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#load-card {
+    padding: 10px;
+}
+
+.person-input {
+    width: 100%;
+}
+
+#success-icon mat-icon {
+    font-size: 120px !important;
+    color: green;
+    margin-top: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+#fail-icon mat-icon {
+    font-size: 120px !important;
+    color: red;
+    margin-top: 10px;
+    text-align: center;
+    width: 100%;
+}

@@ -1,0 +1,35 @@
+h1 {
+    margin-left: 10px;
+}
+
+mat-card {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+mat-list {
+    width: 100%;
+}
+
+mat-list-item {
+    width: 100%;
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+#load-card {
+    padding: 10px;
+}
+
+.result-container {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.stats-card {
+    width: 100%;
+}

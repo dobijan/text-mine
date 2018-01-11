@@ -1,0 +1,103 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Document</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="90%" fxLayoutAlign="left center">
+        <mat-form-field class="id-input">
+          <input matInput type="text" placeholder="Document ID" [(ngModel)]="documentId" />
+          <button mat-button *ngIf="documentId" matSuffix mat-icon-button aria-label="Clear" (click)="documentId=''">
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-form-field>
+      </div>
+      <div class="item item-2" fxFlex="10%" fxLayoutAlign="center center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div id="arrow-icon" *ngIf="document">
+  <mat-icon>arrow_downward</mat-icon>
+</div>
+
+<mat-card class="document-card" *ngIf="document">
+  <mat-card-header>
+    <mat-card-title>{{document.title}}</mat-card-title>
+    <mat-card-subtitle>{{document.id}} | {{document.corpus.title}} | {{document.author}} | {{document.iri}}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-expansion-panel *ngIf="document.content">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+            Content
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-form-field class="content-area">
+          <textarea matInput placeholder="Content" [(ngModel)]="document.content" readonly></textarea>
+      </mat-form-field>
+      <mat-form-field class="normalized-area">
+          <textarea matInput placeholder="Normalized" [(ngModel)]="document.normalized" readonly></textarea>
+      </mat-form-field>
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Sections
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-expansion-panel *ngFor="let section of document.sections">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{section.serial}}
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-form-field class="content-area">
+            <textarea matInput placeholder="Content" [(ngModel)]="section.content" readonly></textarea>
+        </mat-form-field>
+        <mat-form-field class="normalized-area">
+            <textarea matInput placeholder="Normalized" [(ngModel)]="section.normalized" readonly></textarea>
+        </mat-form-field>
+        <!-- <mat-expansion-panel *ngFor="let line of section.lines">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{line.serial}}
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          {{line.content}}
+        </mat-expansion-panel> -->
+      </mat-expansion-panel>
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Pages
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-expansion-panel *ngFor="let page of document.pages">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{page.serial}}
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-form-field class="content-area">
+            <textarea matInput placeholder="Content" [(ngModel)]="page.content" readonly></textarea>
+        </mat-form-field>
+        <mat-form-field class="normalized-area">
+            <textarea matInput placeholder="Normalized" [(ngModel)]="page.normalized" readonly></textarea>
+        </mat-form-field>
+        <!-- <mat-expansion-panel *ngFor="let line of page.lines">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{line.serial}}
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          {{line.content}}
+        </mat-expansion-panel> -->
+      </mat-expansion-panel>
+    </mat-expansion-panel>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,60 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Locations</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="45%" fxLayoutAlign="left center">
+        <mat-form-field class="iri-input">
+          <input matInput type="text" placeholder="Location IRI" [(ngModel)]="iri" />
+          <button mat-button *ngIf="iri" matSuffix mat-icon-button aria-label="Clear" (click)="iri=''">
+                  <mat-icon>close</mat-icon>
+              </button>
+        </mat-form-field>
+      </div>
+      <div class="item item-2" fxFlex="45%" fxLayoutAlign="center center">
+        <mat-form-field class="radius-input">
+          <input matInput type="number" placeholder="Radius (meters)" [(ngModel)]="radius" />
+          <button mat-button *ngIf="radius" matSuffix mat-icon-button aria-label="Clear" (click)="radius=null">
+                    <mat-icon>close</mat-icon>
+                </button>
+        </mat-form-field>
+      </div>
+      <div class="item item-3" fxFlex="10%" fxLayoutAlign="center center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<hr />
+
+<div class="result-container" *ngIf="results && results.length > 0">
+  <div class="map-container">
+    <div id="locations-map" style="height: 300px;" leaflet [leafletOptions]="options" (leafletMapReady)="onMapReady($event)">
+    </div>
+  </div>
+</div>
+<hr />
+
+<div class="result-container" *ngIf="results && results.length > 0">
+  <mat-card class="spatial-card" *ngFor="let result of results">
+    <mat-card-header>
+      <mat-card-title>{{result.iri}}</mat-card-title>
+      <mat-card-subtitle>
+        Radius: {{result.radius}} | {{result.distanceInMeters}} meters from {{result.from}}
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-list>
+        <mat-list-item>
+          Latitude: {{result.latitude}}
+        </mat-list-item>
+        <mat-list-item>
+          Longitude: {{result.longitude}}
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -43,7 +43,7 @@ public interface ArticleRepository
 
     public default Article findOneByDocumentIdAndEntryWord(String documentId, String entryWord) {
         Optional<Article> article = this.findOne(QArticle.article.entryWord.eq(entryWord)
-                .and(QArticle.article.document.id.eq(new ObjectId(documentId))));
+                .and(QArticle.article.documentId.eq(documentId)));
         if (article.isPresent()) {
             return article.get();
         }
@@ -52,7 +52,7 @@ public interface ArticleRepository
 
     public default List<Article> findByDocumentId(ObjectId id) {
         List<Article> result = Lists.newArrayList();
-        this.findAll(new QArticle("article").document.id.eq(id)).forEach(result::add);
+        this.findAll(new QArticle("article").documentId.eq(id.toString())).forEach(result::add);
         return result;
     }
 
@@ -70,8 +70,8 @@ public interface ArticleRepository
     }
 
     public default List<Article> findwithParams(String entryWord, String formVariant, String inflection,
-            List<PartOfSpeech> partOfSpeech, List<String> documentIds, String corpusId,
-            MatchingStrategy matchingStrategy, Integer offset, Integer limit) {
+            List<PartOfSpeech> partOfSpeech, List<String> documentIds, MatchingStrategy matchingStrategy,
+            Integer offset, Integer limit) {
         List<Predicate> predicates = Lists.newArrayList();
         List<Predicate> stringPredicates = Lists.newArrayList(null, null, null);
         List<String> stringValues = Lists.newArrayList(entryWord, formVariant, inflection);
@@ -89,13 +89,13 @@ public interface ArticleRepository
             }
         }
         predicates.add(documentIds == null || documentIds.isEmpty() ? null
-                : QArticle.article.document.id
-                        .in(documentIds.stream().map(ObjectId::new).collect(Collectors.toList())));
+                : QArticle.article.documentId.in(documentIds));
         predicates.add(entryWord == null ? null : stringPredicates.get(0));
         predicates.add(formVariant == null ? null : stringPredicates.get(1));
         predicates.add(inflection == null ? null : stringPredicates.get(2));
         predicates.add(partOfSpeech == null ? null : QArticle.article.partOfSpeech.any().in(partOfSpeech));
-        predicates.add(corpusId == null ? null : QArticle.article.document.corpus.id.eq(new ObjectId(corpusId)));
+
+        // predicates.add(corpusId == null ? null : QArticle.article.document.corpus.id.eq(new ObjectId(corpusId)));
         if (predicates.stream().allMatch(Objects::isNull)) {
             return this.findAll();
         }

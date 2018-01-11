@@ -1,5 +1,6 @@
 package hu.bme.mit.textmine.mongo.core;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -13,9 +14,18 @@ import com.mongodb.WriteConcern;
 @EnableMongoRepositories(basePackages = "hu.bme.mit.textmine.mongo")
 public class MongoConfig extends AbstractMongoConfiguration {
 
+    @Value("${mongo.host}")
+    private String mongoHost;
+
+    @Value("${mongo.port}")
+    private Integer mongoPort;
+
+    @Value("${mongo.database}")
+    private String mongoDatabase;
+
     @Override
     protected String getDatabaseName() {
-        return "text-mine";
+        return this.mongoDatabase;
     }
 
     @Override
@@ -26,7 +36,7 @@ public class MongoConfig extends AbstractMongoConfiguration {
     @SuppressWarnings("deprecation")
     @Override
     public MongoClient mongoClient() {
-        MongoClient c = new MongoClient("127.0.0.1", 27017);
+        MongoClient c = new MongoClient(this.mongoHost, this.mongoPort);
         c.setWriteConcern(WriteConcern.ACKNOWLEDGED);
         return c;
     }

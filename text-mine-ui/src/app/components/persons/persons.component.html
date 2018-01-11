@@ -1,0 +1,8 @@
+<mat-toolbar color="primary" class="mat-elevation-z5">
+    {{title}}
+    <a mat-raised-button [routerLink]="['exists']" routerLinkActive="active">Exists</a>
+    <a mat-raised-button [routerLink]="['section-query']" routerLinkActive="active">Sections</a>
+    <a mat-raised-button [routerLink]="['page-query']" routerLinkActive="active">Pages</a>
+    <a mat-raised-button [routerLink]="['line-query']" routerLinkActive="active">Lines</a>
+</mat-toolbar>
+<router-outlet></router-outlet>

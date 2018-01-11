@@ -1,0 +1,33 @@
+h1 {
+    margin-left: 10px;
+}
+
+mat-card {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+#load-card {
+    padding: 10px;
+}
+
+.result-container {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.page-card {
+    margin-top: 10px;
+}
+
+#documentId {
+    width: 100%;
+}
+
+.location-input {
+    width: 100%;
+}

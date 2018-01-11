@@ -1,0 +1,21 @@
+h1 {
+    margin-left: 10px;
+}
+
+mat-card {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#load-card {
+    padding: 10px;
+}
+
+#result-container {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.note-card {
+    margin-top: 10px;
+}

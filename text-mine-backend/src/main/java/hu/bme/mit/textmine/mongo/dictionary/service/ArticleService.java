@@ -158,8 +158,11 @@ public class ArticleService {
             List<PartOfSpeech> partOfSpeech, List<String> documentIds, String corpusId,
             MatchingStrategy matchingStrategy, Integer offset, Integer limit) {
         if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
+            List<Document> docs = this.documentService.getDocumentsByCorpus(corpusId);
+            documentIds = Lists.newArrayList(Sets.intersection(Sets.newHashSet(documentIds),
+                    docs.stream().map(Document::getId).collect(Collectors.toSet())));
             return this.repository.findwithParams(entryWord, formVariant, inflection, partOfSpeech, documentIds,
-                    corpusId, matchingStrategy, offset, limit);
+                    matchingStrategy, offset, limit);
         } else {
             List<SolrArticle> articles = this.solrArticleRepository.findWithParams(entryWord, formVariant, inflection,
                     partOfSpeech, documentIds, corpusId, matchingStrategy, offset, limit);
@@ -181,8 +184,8 @@ public class ArticleService {
         if (SearchStrategy.MONGO.equals(this.searchStrategy)) {
             return this.repository.findByDocumentSection(documentId, sectionNumber);
         } else {
-            Section page = this.documentService.getSectionBySerial(documentId, sectionNumber);
-            List<ObjectId> ids = this.solrInflectionRepository.findInText(page.getContent()).stream()
+            Section section = this.documentService.getSectionBySerial(documentId, sectionNumber);
+            List<ObjectId> ids = this.solrInflectionRepository.findInText(section.getContent()).stream()
                     .map(id -> new ObjectId(id)).collect(Collectors.toList());
             return this.repository.findAllById(ids);
         }
@@ -482,7 +485,7 @@ public class ArticleService {
     private Article parseToArticle(String input, Document document) {
         List<String> lines = Arrays.asList(input.split("\\R+"));
         Article article = new Article();
-        article.setDocument(document);
+        article.setDocumentId(document.getId().toString());
         article.setProperNoun(false);
         article.setDerivative(false);
         article.setInternalReferences(Lists.newArrayList());
@@ -594,7 +597,7 @@ public class ArticleService {
     public Article updateArticle(Article article) {
         article = this.repository.save(article);
         this.removeSolrEntitiesByArticle(article.getId().toString());
-        this.saveSolrEntities(this.createSolrEntities(article, article.getDocument().getId().toString()));
+        this.saveSolrEntities(this.createSolrEntities(article, article.getDocumentId().toString()));
         return article;
     }
 

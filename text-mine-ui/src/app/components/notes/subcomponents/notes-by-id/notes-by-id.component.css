@@ -1,0 +1,35 @@
+h1 {
+    margin-left: 10px;
+}
+
+mat-card {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#load-card {
+    padding: 10px;
+}
+
+#result-container {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.note-card {
+    margin-top: 10px;
+}
+
+.id-input {
+    width: 100%;
+}
+
+#arrow-icon {
+    margin-top: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+#arrow-icon mat-icon {
+    font-size: 60px !important;
+}

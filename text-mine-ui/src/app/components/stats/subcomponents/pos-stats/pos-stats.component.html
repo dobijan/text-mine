@@ -1,0 +1,49 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Stats</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="80%" fxLayoutAlign="center center">
+        <mat-form-field>
+            <mat-select placeholder="Document" name="option" id="option" [(ngModel)]="selectedId">
+              <mat-option *ngFor="let document of documents" [value]="document.id">
+                {{document.title}}
+              </mat-option>
+            </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="item item-2" fxFlex="20%" fxLayoutAlign="center center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div id="arrow-icon" *ngIf="stats">
+  <mat-icon>arrow_downward</mat-icon>
+</div>
+
+<div class="result-container" *ngIf="stats">
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Counts
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <mat-list>
+      <mat-list-item *ngFor="let pos of stats.counts">{{pos.pos}}: {{pos.count}}</mat-list-item>
+    </mat-list>
+  </mat-expansion-panel>
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Proportions
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <mat-list>
+      <mat-list-item *ngFor="let pos of stats.proportions">{{pos.pos}}: {{pos.proportion}}</mat-list-item>
+    </mat-list>
+  </mat-expansion-panel>
+</div>

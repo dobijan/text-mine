@@ -1,0 +1,51 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Notes</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="75%" fxLayoutAlign="center center">
+        <mat-progress-bar class="load-progress" color="accent" [mode]="progressMode" [value]="progressValue">
+        </mat-progress-bar>
+      </div>
+      <div class="item item-2" fxFlex="20%" fxLayoutAlign="center center">
+        <mat-form-field class="document-input">
+          <mat-select placeholder="Document" name="option" id="option" [(ngModel)]="selectedId">
+            <mat-option *ngFor="let document of documents" [value]="document.id">
+              {{document.title}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="item item-3" fxFlex="5%" fxLayoutAlign="right center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<hr/>
+
+<div id="result-container" *ngIf="notes.length > 0">
+  <mat-card class="note-card" *ngFor="let note of notes">
+    <mat-card-header>
+      <mat-card-title>{{note.id}}</mat-card-title>
+      <mat-card-subtitle>{{note.type}} | {{note.subType}} | {{note.iri}}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div>{{note.quote}}</div>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{note.documentId}} / {{note.section}}
+          </mat-panel-title>
+          <mat-panel-description>
+            Click to view content
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        {{note.content}}
+      </mat-expansion-panel>
+    </mat-card-content>
+  </mat-card>
+</div>

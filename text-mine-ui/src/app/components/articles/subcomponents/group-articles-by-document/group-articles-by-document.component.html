@@ -1,0 +1,187 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Article Groups</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="75%" fxLayoutAlign="center center">
+        <mat-progress-bar class="load-progress" color="accent" [mode]="progressMode" [value]="progressValue">
+        </mat-progress-bar>
+      </div>
+      <div class="item item-2" fxFlex="20%" fxLayoutAlign="center center">
+        <mat-form-field>
+          <mat-select placeholder="Corpus" name="corpusId" id="corpusId" [(ngModel)]="filters.corpusId">
+            <mat-option *ngFor="let corpus of corpora" [value]="corpus.id">
+              {{corpus.title}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="item item-3" fxFlex="5%" fxLayoutAlign="right center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Filter Conditions
+        </mat-panel-title>
+        <mat-panel-description>
+          Click to toggle
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+        <div class="item item-1" fxFlex="33%" fxLayoutAlign="left center">
+          <mat-form-field class="entry-word-input">
+            <input matInput type="text" placeholder="Entry word" [(ngModel)]="filters.entryWord" />
+            <button mat-button *ngIf="filters.entryWord" matSuffix mat-icon-button aria-label="Clear" (click)="filters.entryWord=''">
+                    <mat-icon>close</mat-icon>
+                </button>
+          </mat-form-field>
+        </div>
+        <div class="item item-2" fxFlex="34%" fxLayoutAlign="center center">
+          <mat-form-field class="form-variant-input">
+            <input matInput type="text" placeholder="Form variant" [(ngModel)]="filters.formVariant" />
+            <button mat-button *ngIf="filters.formVariant" matSuffix mat-icon-button aria-label="Clear" (click)="filters.formVariant=''">
+                    <mat-icon>close</mat-icon>
+                </button>
+          </mat-form-field>
+        </div>
+        <div class="item item-3" fxFlex="33%" fxLayoutAlign="right center">
+          <mat-form-field class="inflection-input">
+            <input matInput type="text" placeholder="Inflection" [(ngModel)]="filters.inflection" />
+            <button mat-button *ngIf="filters.inflection" matSuffix mat-icon-button aria-label="Clear" (click)="filters.inflection=''">
+                    <mat-icon>close</mat-icon>
+                </button>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+        <div class="item item-1" fxFlex="33%" fxLayoutAlign="left center">
+          <mat-form-field>
+            <mat-select placeholder="Part of Speech" name="pos" id="pos" [(ngModel)]="filters.pos" multiple>
+              <mat-option *ngFor="let pos of poss" [value]="pos">
+                {{pos}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="item item-2" fxFlex="33%" fxLayoutAlign="left center">
+          <mat-form-field>
+            <mat-select [placeholder]="'Matching Strategy'" name="matchingStrategy" id="matchingStrategy" [(ngModel)]="filters.matchingStrategy">
+              <mat-option *ngFor="let strategy of strategies" [value]="strategy">
+                {{strategy}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="item item-3" fxFlex="33%" fxLayoutAlign="right center">
+          <mat-form-field class="pos-count-input">
+            <input matInput type="number" placeholder="Part of Speech Count" [(ngModel)]="filters.posCount" />
+            <button mat-button *ngIf="filters.posCount" matSuffix mat-icon-button aria-label="Clear" (click)="filters.posCount=null">
+                    <mat-icon>close</mat-icon>
+                </button>
+          </mat-form-field>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  </mat-card-content>
+</mat-card>
+
+<hr/>
+
+<div class="result-container" *ngIf="groups && groups.length > 0">
+  <mat-expansion-panel *ngFor="let group of groups">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        {{documentTitles.get(group.id)}}
+      </mat-panel-title>
+      <mat-panel-description>
+        {{group.id}}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+    <mat-card class="article-card" *ngFor="let article of group.articles">
+      <mat-card-header>
+        <mat-card-title>{{article.entryWord}}</mat-card-title>
+        <mat-card-subtitle>{{article.documentId}} | {{article.id}} | {{article.iri}}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+          <div class="item item-1" fxFlex="50%" fxLayoutAlign="left center">
+            Proper noun:
+          </div>
+          <div class="item item-2" fxFlex="50%" fxLayoutAlign="left center">
+            {{article.properNoun}}
+          </div>
+        </div>
+        <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+          <div class="item item-1" fxFlex="50%" fxLayoutAlign="left center">
+            Derivative:
+          </div>
+          <div class="item item-2" fxFlex="50%" fxLayoutAlign="left center">
+            {{article.derivative}}
+          </div>
+        </div>
+        <mat-expansion-panel *ngIf="article.partOfSpeech && article.partOfSpeech.length > 0">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Parts of Speech
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-list>
+            <mat-list-item *ngFor="let pos of article.partOfSpeech">{{pos}}</mat-list-item>
+          </mat-list>
+        </mat-expansion-panel>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Form Variants
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-expansion-panel *ngFor="let fv of article.formVariants">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{fv.name}}
+              </mat-panel-title>
+              <mat-panel-description>
+                Inflections
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <mat-expansion-panel *ngFor="let inf of fv.inflections">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  {{inf.name}} ({{inf.occurrences}} occurrences)
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <mat-list>
+                <mat-list-item *ngFor="let example of inf.examples">
+                  {{example.exampleSentence}} (page {{example.page}})
+                </mat-list-item>
+                <mat-list-item *ngIf="inf.examples.length === 0">
+                  No examples!
+                </mat-list-item>
+              </mat-list>
+            </mat-expansion-panel>
+          </mat-expansion-panel>
+        </mat-expansion-panel>
+        <mat-expansion-panel *ngIf="article.editorNote">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Editor's Note
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          {{article.editorNote}}
+        </mat-expansion-panel>
+        <mat-expansion-panel *ngIf="article.meaning">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Meaning
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          {{article.meaning}}
+        </mat-expansion-panel>
+      </mat-card-content>
+    </mat-card>
+  </mat-expansion-panel>
+</div>

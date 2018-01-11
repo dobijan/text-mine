@@ -28,6 +28,7 @@ import org.springframework.data.solr.core.query.FacetQuery;
 import org.springframework.data.solr.core.query.Query;
 import org.springframework.data.solr.core.query.SimpleFacetQuery;
 import org.springframework.data.solr.core.query.SimpleQuery;
+import org.springframework.data.solr.core.query.SimpleStringCriteria;
 import org.springframework.data.solr.core.query.result.FacetPage;
 import org.springframework.data.solr.core.query.result.ScoredPage;
 
@@ -170,7 +171,7 @@ public class SolrDocumentRepositoryImpl implements CustomSolrDocumentRepository 
 
     @Override
     public Map<String, Integer> mostFrequentShingles(int limit) {
-        FacetQuery q = new SimpleFacetQuery(new Criteria()).setFacetOptions(
+        FacetQuery q = new SimpleFacetQuery(new SimpleStringCriteria("*:*")).setFacetOptions(
                 new FacetOptions("text_phrases").setFacetLimit(limit));
         FacetPage<SolrDocument> page = this.template.queryForFacetPage("text-mine-document", q, SolrDocument.class,
                 RequestMethod.POST);
@@ -188,7 +189,7 @@ public class SolrDocumentRepositoryImpl implements CustomSolrDocumentRepository 
         List<Map<String, Integer>> shingleSets = Lists.newArrayList();
         for (PartOfSpeech pos : partsOfSpeech) {
             FacetOptions options = new FacetOptions("pos_shingles").setFacetLimit(limit);
-            FacetQuery q = new SimpleFacetQuery(new Criteria()).setFacetOptions(options);
+            FacetQuery q = new SimpleFacetQuery(new SimpleStringCriteria("*:*")).setFacetOptions(options);
             SolrQuery solrQuery = new DefaultQueryParser().constructSolrQuery(q);
             solrQuery.add("facet.contains", pos.toString().toLowerCase());
             String queryString = new DefaultQueryParser().getQueryString(q);

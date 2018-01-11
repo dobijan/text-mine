@@ -46,7 +46,7 @@ public class ArticleDTO extends BaseMongoEntityDTO {
     public static ArticleDTO from(Article article) {
         ArticleDTO dto = new ArticleDTO();
         BeanUtils.copyProperties(article, dto);
-        dto.setDocumentId(article.getDocument().getId().toString());
+        dto.setDocumentId(article.getDocumentId());
         return dto;
     }
 

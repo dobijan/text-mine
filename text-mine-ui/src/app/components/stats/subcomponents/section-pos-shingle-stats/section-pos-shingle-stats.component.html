@@ -1,0 +1,53 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Stats</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="30%" fxLayoutAlign="left center">
+        <mat-form-field>
+          <mat-select placeholder="Document" name="documentId" id="documentId" [(ngModel)]="documentId">
+            <mat-option *ngFor="let document of documents" [value]="document.id">
+              {{document.title}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="item item-2" fxFlex="30%" fxLayoutAlign="center center">
+        <mat-form-field>
+          <mat-select placeholder="Part of Speech" name="pos" id="pos" [(ngModel)]="pos" multiple>
+            <mat-option *ngFor="let pos of poss" [value]="pos">
+              {{pos}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="item item-3" fxFlex="30%" fxLayoutAlign="center center">
+        <mat-form-field class="limit-input">
+          <input matInput type="number" placeholder="Limit" [(ngModel)]="limit" />
+          <button mat-button *ngIf="limit" matSuffix mat-icon-button aria-label="Clear" (click)="limit=null">
+                      <mat-icon>close</mat-icon>
+                  </button>
+        </mat-form-field>
+      </div>
+      <div class="item item-4" fxFlex="10%" fxLayoutAlign="center center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<hr />
+
+<div class="result-container" *ngIf="stats && stats.length > 0">
+  <mat-list>
+    <mat-list-item *ngFor="let entry of stats">
+      <mat-card class="stats-card">
+        <mat-card-content>
+          {{entry.key}} -> {{entry.value}}
+        </mat-card-content>
+      </mat-card>
+    </mat-list-item>
+  </mat-list>
+</div>

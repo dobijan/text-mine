@@ -1,0 +1,92 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Documents</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="70%" fxLayoutAlign="left center">
+        <mat-progress-bar class="load-progress" color="accent" [mode]="progressMode" [value]="progressValue">
+        </mat-progress-bar>
+      </div>
+      <div class="item item-2" fxFlex="20%" fxLayoutAlign="center center">
+        <mat-form-field class="corpus-input">
+            <mat-select placeholder="Corpus" name="option" id="option" [(ngModel)]="selectedId">
+              <mat-option *ngFor="let corpus of corpora" [value]="corpus.id">
+                {{corpus.title}}
+              </mat-option>
+            </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="item item-3" fxFlex="10%" fxLayoutAlign="right center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<hr />
+
+<div class="result-container" *ngIf="documents && documents.length > 0">
+  <mat-card class="document-card" *ngFor="let document of documents">
+    <mat-card-header>
+      <mat-card-title>{{document.title}}</mat-card-title>
+      <mat-card-subtitle>{{document.id}} | {{document.corpus.title}} | {{document.author}} | {{document.iri}}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-expansion-panel *ngIf="document.content">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Content
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-form-field class="content-area">
+          <textarea matInput placeholder="Content" [(ngModel)]="document.content" readonly></textarea>
+        </mat-form-field>
+        <mat-form-field class="normalized-area">
+          <textarea matInput placeholder="Normalized" [(ngModel)]="document.normalized" readonly></textarea>
+        </mat-form-field>
+      </mat-expansion-panel>
+      <!-- <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Sections
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-expansion-panel *ngFor="let section of document.sections">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{section.serial}}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-form-field class="content-area">
+                <textarea matInput placeholder="Content" [(ngModel)]="section.content" readonly></textarea>
+            </mat-form-field>
+            <mat-form-field class="normalized-area">
+                <textarea matInput placeholder="Normalized" [(ngModel)]="section.normalized" readonly></textarea>
+            </mat-form-field>
+          </mat-expansion-panel>
+        </mat-expansion-panel>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Pages
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-expansion-panel *ngFor="let page of document.pages">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{page.serial}}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-form-field class="content-area">
+                <textarea matInput placeholder="Content" [(ngModel)]="page.content" readonly></textarea>
+            </mat-form-field>
+            <mat-form-field class="normalized-area">
+                <textarea matInput placeholder="Normalized" [(ngModel)]="page.normalized" readonly></textarea>
+            </mat-form-field>
+          </mat-expansion-panel>
+        </mat-expansion-panel> -->
+    </mat-card-content>
+  </mat-card>
+</div>

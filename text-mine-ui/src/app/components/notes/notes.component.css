@@ -1,0 +1,8 @@
+.mat-toolbar a {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.mat-toolbar {
+  z-index: 5;
+}

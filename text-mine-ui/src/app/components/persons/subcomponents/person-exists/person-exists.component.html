@@ -1,0 +1,29 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Check</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="90%" fxLayoutAlign="left center">
+        <mat-form-field class="person-input">
+          <input matInput type="text" placeholder="Person name" [(ngModel)]="person" />
+          <button mat-button *ngIf="person" matSuffix mat-icon-button aria-label="Clear" (click)="person=''">
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-form-field>
+      </div>
+      <div class="item item-2" fxFlex="10%" fxLayoutAlign="center center">
+        <button mat-button color="accent" (click)="onSubmit()">Check</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div id="success-icon" *ngIf="exists === true">
+  <mat-icon>check_circle</mat-icon>
+</div>
+
+<div id="fail-icon" *ngIf="exists === false">
+  <mat-icon>cancel</mat-icon>
+</div>

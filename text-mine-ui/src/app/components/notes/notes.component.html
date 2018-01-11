@@ -1,0 +1,7 @@
+<mat-toolbar color="primary" class="mat-elevation-z5">
+    {{title}}
+    <a mat-raised-button [routerLink]="['all']" routerLinkActive="active">All</a>
+    <a mat-raised-button [routerLink]="['by-document']" routerLinkActive="active">By Document</a>
+    <a mat-raised-button [routerLink]="['by-id']" routerLinkActive="active">By Id</a>
+</mat-toolbar>
+<router-outlet></router-outlet>

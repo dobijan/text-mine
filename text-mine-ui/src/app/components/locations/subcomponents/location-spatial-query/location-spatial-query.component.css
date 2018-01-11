@@ -1,0 +1,43 @@
+h1 {
+    margin-left: 10px;
+}
+
+mat-card {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+#load-card {
+    padding: 10px;
+}
+
+.result-container {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.spatial-card {
+    margin-top: 10px;
+}
+
+.iri-input {
+    width: 100%;
+}
+
+.radius-input {
+    width: 100%;
+}
+
+.map-container {
+    width: 100%;
+    text-align: center;
+}
+
+#locations-map {
+    width: 95%;
+    display: inline-block;
+}

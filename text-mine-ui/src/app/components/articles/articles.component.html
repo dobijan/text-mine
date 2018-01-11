@@ -1,0 +1,8 @@
+<mat-toolbar color="primary" class="mat-elevation-z5">
+    {{title}}
+    <a mat-raised-button [routerLink]="['by-id']" routerLinkActive="active">By Id</a>
+    <a mat-raised-button [routerLink]="['by-document']" routerLinkActive="active">By Document</a>
+    <a mat-raised-button [routerLink]="['filter']" routerLinkActive="active">Filter</a>
+    <a mat-raised-button [routerLink]="['group-by-document']" routerLinkActive="active">Group by Document</a>
+</mat-toolbar>
+<router-outlet></router-outlet>

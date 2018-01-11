@@ -9,7 +9,6 @@ import java.util.function.BiFunction;
 
 import javax.annotation.Resource;
 
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -45,9 +44,9 @@ class ArticleRepositoryImpl implements CustomArticleRepository {
     @Override
     public boolean updatePOS(String documentId, String entryWord, List<PartOfSpeech> pos) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("entryWord").is(entryWord).and("document.$id").is(new ObjectId(documentId)));
+        query.addCriteria(Criteria.where("entryWord").is(entryWord).and("documentId").is(documentId));
         query.fields().include("entryWord");
-        query.fields().include("document");
+        query.fields().include("documentId");
         Update update = new Update();
         update.set("partOfSpeech", pos);
         UpdateResult res = this.template.updateFirst(query, update, Article.class);

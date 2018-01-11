@@ -40,6 +40,8 @@ public enum PartOfSpeech {
     static {
         for (PartOfSpeech pos : PartOfSpeech.values()) {
             PartOfSpeech.mapping.put(pos.hungarianAbbreviation, pos);
+            PartOfSpeech.mapping.put(pos.toString(), pos);
+            PartOfSpeech.mapping.put(pos.toString().toLowerCase(), pos);
         }
     }
 
@@ -51,7 +53,7 @@ public enum PartOfSpeech {
         if (null == abbrev || abbrev.equals("")) {
             return null;
         }
-        PartOfSpeech pos = PartOfSpeech.mapping.get(abbrev);
+        PartOfSpeech pos = PartOfSpeech.mapping.get(abbrev.toLowerCase());
         if (pos == null) {
             throw new IllegalArgumentException("Invalid POS abbreviation: " + abbrev);
         }

@@ -1,0 +1,11 @@
+<mat-toolbar color="primary" class="mat-elevation-z5">
+    {{title}}
+    <a mat-raised-button [routerLink]="['pos-stats']" routerLinkActive="active">Parts of Speech Stats</a>
+    <a mat-raised-button [routerLink]="['shingle-stats']" routerLinkActive="active">Shingles</a>
+    <a mat-raised-button [routerLink]="['pos-shingle-stats']" routerLinkActive="active">Part of Speech Shingles</a>
+    <a mat-raised-button [routerLink]="['section-shingle-stats']" routerLinkActive="active">Section Shingles</a>
+    <a mat-raised-button [routerLink]="['section-pos-shingle-stats']" routerLinkActive="active">Section PoS Shingles</a>
+    <a mat-raised-button [routerLink]="['page-shingle-stats']" routerLinkActive="active">Page Shingles</a>
+    <a mat-raised-button [routerLink]="['page-pos-shingle-stats']" routerLinkActive="active">Page PoS Shingles</a>
+</mat-toolbar>
+<router-outlet></router-outlet>

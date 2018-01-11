@@ -1,0 +1,56 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Note</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="90%" fxLayoutAlign="left center">
+        <mat-form-field class="id-input">
+          <input matInput type="text" placeholder="Note ID" [(ngModel)]="noteId" />
+          <button mat-button *ngIf="noteId" matSuffix mat-icon-button aria-label="Clear" (click)="noteId=''">
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-form-field>
+      </div>
+      <div class="item item-2" fxFlex="10%" fxLayoutAlign="center center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div id="arrow-icon" *ngIf="note">
+  <mat-icon>arrow_downward</mat-icon>
+</div>
+
+<mat-card class="note-card" *ngIf="note">
+  <mat-card-header>
+    <mat-card-title>{{note.id}}</mat-card-title>
+    <mat-card-subtitle>{{note.type}} | {{note.subType}} | {{note.iri}}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <div>{{note.quote}}</div>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          {{note.documentId}} / {{note.section}}
+        </mat-panel-title>
+        <mat-panel-description>
+          Click to view content
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      {{note.content}}
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Line references
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-list>
+        <mat-list-item *ngFor="let lineRef of note.lineRefs">{{lineRef}}</mat-list-item>
+      </mat-list>
+    </mat-expansion-panel>
+  </mat-card-content>
+</mat-card>

@@ -148,13 +148,6 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!-- marked the embedded servlet container as provided -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
 		<!-- hot swapping, disable cache for template, enable live reload -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -212,7 +205,145 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+			<plugin>
+				<groupId>com.github.kongchen</groupId>
+				<artifactId>swagger-maven-plugin</artifactId>
+				<version>3.1.5</version>
+				<configuration>
+					<apiSources>
+						<apiSource>
+							<springmvc>true</springmvc>
+							<locations>
+								<location>
+									hu.bme.mit.textmine.mongo.corpus.web.CorpusController
+								</location>
+								<location>
+									hu.bme.mit.textmine.mongo.dictionary.web.ArticleController
+								</location>
+								<location>
+									hu.bme.mit.textmine.mongo.document.web.DocumentController
+								</location>
+								<location>
+									hu.bme.mit.textmine.mongo.note.web.NoteController
+								</location>
+								<location>
+									hu.bme.mit.textmine.rdf.web.LocationController
+								</location>
+								<location>
+									hu.bme.mit.textmine.rdf.web.PersonController
+								</location>
+							</locations>
+							<schemes>
+								<scheme>
+									http
+								</scheme>
+							</schemes>
+							<host>localhost:8080</host>
+							<basePath>/</basePath>
+							<info>
+								<title>${project.artifactId}-api</title>
+								<version>v1</version>
+								<description>${project.artifactId}</description>
+							</info>
+							<swaggerDirectory>src/main/resources/generated/api</swaggerDirectory>
+						</apiSource>
+					</apiSources>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>io.swagger</groupId>
+				<artifactId>swagger-codegen-maven-plugin</artifactId>
+				<version>2.2.3</version>
+				<executions>
+					<execution>
+						<id>generate-corpus</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>src/main/resources/generated/api/swagger.json</inputSpec>
+							<language>typescript-angular2</language>
+							<output>../${project.artifactId}-ui/src/app/services/api/generated</output>
+						</configuration>
+					</execution>
+					<!-- <execution> -->
+					<!-- <id>generate-suggestions</id> -->
+					<!-- <phase>generate-sources</phase> -->
+					<!-- <goals> -->
+					<!-- <goal>generate</goal> -->
+					<!-- </goals> -->
+					<!-- <configuration> -->
+					<!-- <inputSpec>${artifactId}/src/main/resources/generated/suggestions/swagger.json</inputSpec> -->
+					<!-- <language>typescript-angular2</language> -->
+					<!-- <output>../${artifactId}-ui/src/app/services/api/generated/suggestions</output> -->
+					<!-- </configuration> -->
+					<!-- </execution> -->
+				</executions>
+			</plugin>
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>io.swagger</groupId>
+										<artifactId>
+											swagger-codegen-maven-plugin
+										</artifactId>
+										<versionRange>
+											[2.2.3,)
+										</versionRange>
+										<goals>
+											<goal>generate</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute></execute>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											com.github.kongchen
+										</groupId>
+										<artifactId>
+											swagger-maven-plugin
+										</artifactId>
+										<versionRange>
+											[3.1.5,)
+										</versionRange>
+										<goals>
+											<goal>generate</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute></execute>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 	<repositories>

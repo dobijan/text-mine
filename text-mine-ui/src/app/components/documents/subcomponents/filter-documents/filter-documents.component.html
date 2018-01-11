@@ -1,0 +1,107 @@
+<h1>{{title}}</h1>
+<mat-card id="load-card">
+  <mat-card-header>
+    <mat-card-title>Load Documents</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div class="item item-1" fxFlex="90%" fxLayoutAlign="center center">
+        <mat-progress-bar class="load-progress" color="accent" [mode]="progressMode" [value]="progressValue">
+        </mat-progress-bar>
+      </div>
+      <div class="item item-3" fxFlex="10%" fxLayoutAlign="right center">
+        <button mat-button color="accent" (click)="onSubmit()">Load</button>
+      </div>
+    </div>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Filter Conditions
+        </mat-panel-title>
+        <mat-panel-description>
+          Click to toggle
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+        <div class="item item-1" fxFlex="33%" fxLayoutAlign="left center">
+          <mat-form-field class="entry-text-input">
+            <input matInput type="text" placeholder="Entry text" [(ngModel)]="filters.entryText" />
+            <button mat-button *ngIf="filters.entryText" matSuffix mat-icon-button aria-label="Clear" (click)="filters.entryText=''">
+                    <mat-icon>close</mat-icon>
+                </button>
+          </mat-form-field>
+        </div>
+        <div class="item item-2" fxFlex="33%" fxLayoutAlign="left center">
+          <mat-form-field>
+            <mat-select placeholder="Part of Speech" name="pos" id="pos" [(ngModel)]="filters.pos" multiple>
+              <mat-option *ngFor="let pos of poss" [value]="pos">
+                {{pos}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="item item-3" fxFlex="33%" fxLayoutAlign="left center">
+          <mat-form-field class="entry-word-input">
+            <input matInput type="text" placeholder="Entry word" [(ngModel)]="filters.entryWord" />
+            <button mat-button *ngIf="filters.entryWord" matSuffix mat-icon-button aria-label="Clear" (click)="filters.entryWord=''">
+                    <mat-icon>close</mat-icon>
+                </button>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout fxLayout.xs="column" fxLayoutAlign="center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+        <div class="item item-1" fxFlex="34%" fxLayoutAlign="center center">
+          <mat-form-field>
+            <mat-select placeholder="Document" name="documentId" id="documentId" [(ngModel)]="filters.documentId" multiple>
+              <mat-option *ngFor="let document of documents" [value]="document.id">
+                {{document.title}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="item item-2" fxFlex="34%" fxLayoutAlign="center center">
+          <mat-form-field class="offset-input">
+            <input matInput type="number" placeholder="Offset" [(ngModel)]="filters.offset" />
+            <button mat-button *ngIf="filters.offset" matSuffix mat-icon-button aria-label="Clear" (click)="filters.offset=null">
+                      <mat-icon>close</mat-icon>
+                  </button>
+          </mat-form-field>
+        </div>
+        <div class="item item-3" fxFlex="33%" fxLayoutAlign="right center">
+          <mat-form-field class="limit-input">
+            <input matInput type="number" placeholder="Limit" [(ngModel)]="filters.limit" />
+            <button mat-button *ngIf="filters.limit" matSuffix mat-icon-button aria-label="Clear" (click)="filters.limit=null">
+                      <mat-icon>close</mat-icon>
+                  </button>
+          </mat-form-field>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  </mat-card-content>
+</mat-card>
+
+<hr/>
+
+<div class="result-container" *ngIf="results && results.length > 0">
+  <mat-card class="document-card" *ngFor="let document of results">
+    <mat-card-header>
+      <mat-card-title>{{document.title}}</mat-card-title>
+      <mat-card-subtitle>{{document.id}} | {{document.corpus.title}} | {{document.author}} | {{document.iri}}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-expansion-panel *ngIf="document.content">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Content
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-form-field class="content-area">
+          <textarea matInput placeholder="Content" [(ngModel)]="document.content" readonly></textarea>
+        </mat-form-field>
+        <mat-form-field class="normalized-area">
+          <textarea matInput placeholder="Normalized" [(ngModel)]="document.normalized" readonly></textarea>
+        </mat-form-field>
+      </mat-expansion-panel>
+    </mat-card-content>
+  </mat-card>
+</div>

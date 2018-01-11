@@ -1,0 +1,13 @@
+export * from './ArticlesApi';
+import { ArticlesApi } from './ArticlesApi';
+export * from './CorporaApi';
+import { CorporaApi } from './CorporaApi';
+export * from './DocumentsApi';
+import { DocumentsApi } from './DocumentsApi';
+export * from './LocationsApi';
+import { LocationsApi } from './LocationsApi';
+export * from './NotesApi';
+import { NotesApi } from './NotesApi';
+export * from './PersonsApi';
+import { PersonsApi } from './PersonsApi';
+export const APIS = [ArticlesApi, CorporaApi, DocumentsApi, LocationsApi, NotesApi, PersonsApi];

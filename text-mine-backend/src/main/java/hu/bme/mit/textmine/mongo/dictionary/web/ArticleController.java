@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import hu.bme.mit.textmine.mongo.dictionary.model.Article;
@@ -29,7 +30,13 @@ import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeech;
 import hu.bme.mit.textmine.mongo.dictionary.model.PartOfSpeechCsvBean;
 import hu.bme.mit.textmine.mongo.dictionary.service.ArticleService;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import lombok.Getter;
+import lombok.Setter;
 
+@Api(value = "/articles")
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/articles")
 public class ArticleController {
@@ -41,17 +48,63 @@ public class ArticleController {
     @Lazy
     private DocumentService documentService;
 
+    @Getter
+    @Setter
+    private static class ListResult<T> {
+
+        public long size = 0;
+        public long rangeFrom = 0;
+        public long rangeSize = 0;
+        public List<T> entries = Lists.newArrayList();
+    }
+
+    @Getter
+    @Setter
+    private static class ArticleDTOList extends ListResult<ArticleDTO> {
+
+        public List<ArticleDTO> entries;
+
+    }
+
+    @ApiOperation(
+            value = "Get filtered articles",
+            httpMethod = "GET",
+            response = ArticleDTO.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<ArticleDTO>> getFiltered(
-            @RequestParam(required = false) String entryWord,
-            @RequestParam(required = false) String formVariant,
-            @RequestParam(required = false) String inflection,
-            @RequestParam(required = false) List<String> partOfSpeech,
-            @RequestParam(required = false, name = "documentId") List<String> documentIds,
-            @RequestParam(required = false) String corpusId,
-            @RequestParam(required = false, defaultValue = "EXACT_MATCH") MatchingStrategy matchingStrategy,
-            @RequestParam(required = false, defaultValue = "0") Integer offset,
-            @RequestParam(required = false, defaultValue = "100") Integer limit) {
+            @ApiParam(value = "Entry word", required = false, name = "entryWord") @RequestParam(
+                    name = "entryWord",
+                    required = false) String entryWord,
+            @ApiParam(value = "Form variant", required = false, name = "formVariant") @RequestParam(
+                    name = "formVariant",
+                    required = false) String formVariant,
+            @ApiParam(value = "Inflection", required = false, name = "inflection") @RequestParam(
+                    name = "inflection",
+                    required = false) String inflection,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    name = "pos",
+                    required = false) List<String> partOfSpeech,
+            @ApiParam(
+                    value = "Document ids",
+                    required = false,
+                    allowMultiple = true,
+                    name = "documentId") @RequestParam(required = false, name = "documentId") List<String> documentIds,
+            @ApiParam(value = "Corpus id", required = false, name = "corpusId") @RequestParam(
+                    name = "corpusId",
+                    required = false) String corpusId,
+            @ApiParam(value = "Matching strategy", required = false, name = "matchingStrategy") @RequestParam(
+                    name = "matchingStrategy",
+                    required = false,
+                    defaultValue = "EXACT_MATCH") MatchingStrategy matchingStrategy,
+            @ApiParam(value = "Offset", required = false, name = "offset") @RequestParam(
+                    name = "offset",
+                    required = false,
+                    defaultValue = "0") Integer offset,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    name = "limit",
+                    required = false,
+                    defaultValue = "100") Integer limit) {
         List<PartOfSpeech> pos = partOfSpeech != null ? PartOfSpeech.of(partOfSpeech) : null;
         List<Article> articles = this.articleService.queryWithParams(entryWord, formVariant, inflection, pos,
                 documentIds, corpusId, matchingStrategy, offset, limit);
@@ -61,8 +114,13 @@ public class ArticleController {
         return new ResponseEntity<>(ArticleDTO.from(articles), HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get article by Id",
+            httpMethod = "GET",
+            response = ArticleDTO.class)
     @RequestMapping(method = RequestMethod.GET, path = "/{id}")
-    public ResponseEntity<ArticleDTO> getOne(@PathVariable("id") String id) {
+    public ResponseEntity<ArticleDTO> getOne(
+            @ApiParam(value = "Article Id", required = true) @PathVariable("id") String id) {
         Article article = this.articleService.getArticle(id);
         if (article == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -70,15 +128,35 @@ public class ArticleController {
         return new ResponseEntity<>(ArticleDTO.from(article), HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get articles grouped by document id",
+            httpMethod = "GET",
+            response = ArticleDTOList.class,
+            responseContainer = "Map")
     @RequestMapping(method = RequestMethod.GET, path = "/group/by-document")
-    public ResponseEntity<Map<Object, List<ArticleDTO>>> groupByDocument(
-            @RequestParam(required = false) String entryWord,
-            @RequestParam(required = false) String formVariant,
-            @RequestParam(required = false) String inflection,
-            @RequestParam(required = false) List<String> partOfSpeech,
-            @RequestParam(required = false) String corpusId,
-            @RequestParam(required = false, defaultValue = "EXACT_MATCH") MatchingStrategy matchingStrategy,
-            @RequestParam(required = false) Integer posCount) {
+    public ResponseEntity<Map<String, List<ArticleDTO>>> groupByDocument(
+            @ApiParam(value = "Entry word", required = false, name = "entryWord") @RequestParam(
+                    name = "entryWord",
+                    required = false) String entryWord,
+            @ApiParam(value = "Form variant", required = false, name = "formVariant") @RequestParam(
+                    name = "formVariant",
+                    required = false) String formVariant,
+            @ApiParam(value = "Inflection", required = false, name = "inflection") @RequestParam(
+                    name = "inflection",
+                    required = false) String inflection,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    name = "pos",
+                    required = false) List<String> partOfSpeech,
+            @ApiParam(value = "Corpus Id", required = false, name = "corpusId") @RequestParam(
+                    name = "corpusId",
+                    required = false) String corpusId,
+            @ApiParam(value = "Matching strategy", required = false, name = "matchingStrategy") @RequestParam(
+                    name = "matchingStrategy",
+                    required = false,
+                    defaultValue = "EXACT_MATCH") MatchingStrategy matchingStrategy,
+            @ApiParam(value = "Part of speech count", required = false, name = "posCount") @RequestParam(
+                    name = "posCount",
+                    required = false) Integer posCount) {
         List<PartOfSpeech> pos = partOfSpeech != null ? PartOfSpeech.of(partOfSpeech) : null;
         List<DocumentArticles> groups = this.articleService.findByDocumentWithParams(entryWord, formVariant, inflection,
                 pos, matchingStrategy, posCount);
@@ -88,18 +166,27 @@ public class ArticleController {
         if (groups.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
-        Map<Object, List<ArticleDTO>> result = Maps.newHashMap();
+        Map<String, List<ArticleDTO>> result = Maps.newHashMap();
         for (DocumentArticles group : groups) {
-            result.put(group.getArticles().get(0).getId().toString(), ArticleDTO.from(group.getArticles()));
+            result.put(group.getArticles().get(0).getDocumentId(), ArticleDTO.from(group.getArticles()));
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get articles of a document",
+            httpMethod = "GET",
+            response = ArticleDTO.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/by-document/{documentId}")
     public ResponseEntity<List<ArticleDTO>> getByDocument(
-            @PathVariable("documentId") String documentId,
-            @RequestParam(required = false) Integer section,
-            @RequestParam(required = false) Integer page) {
+            @ApiParam(value = "Document Id", required = true) @PathVariable("documentId") String documentId,
+            @ApiParam(value = "Section number", required = false, name = "section") @RequestParam(
+                    name = "section",
+                    required = false) Integer section,
+            @ApiParam(value = "Page number", required = false, name = "page") @RequestParam(
+                    name = "page",
+                    required = false) Integer page) {
         if (section != null && page != null) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
@@ -107,7 +194,7 @@ public class ArticleController {
         if (page != null) {
             articles = this.articleService.findInDocumentPage(documentId, page);
         } else if (section != null) {
-            articles = this.articleService.findInDocumentSection(documentId, page);
+            articles = this.articleService.findInDocumentSection(documentId, section);
         } else {
             articles = this.articleService.getArticlesByDocument(documentId);
         }
@@ -175,8 +262,15 @@ public class ArticleController {
         return null;
     }
 
+    @ApiOperation(
+            value = "Update article",
+            httpMethod = "PUT",
+            response = ArticleDTO.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.PUT, path = "/{id}")
-    public ResponseEntity<ArticleDTO> putArticle(@RequestBody Article article, @PathVariable("id") String id) {
+    public ResponseEntity<ArticleDTO> putArticle(
+            @ApiParam(value = "Article", required = true) @RequestBody Article article,
+            @ApiParam(value = "Article id", required = true) @PathVariable("id") String id) {
         Article oldArticle = this.articleService.getArticle(id);
         if (oldArticle == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -185,8 +279,13 @@ public class ArticleController {
         return new ResponseEntity<>(ArticleDTO.from(newArticle), HttpStatus.ACCEPTED);
     }
 
+    @ApiOperation(
+            value = "Delete article",
+            httpMethod = "DELETE",
+            response = String.class)
     @RequestMapping(method = RequestMethod.DELETE, path = "/{id}")
-    public ResponseEntity<String> deleteArticle(@PathVariable("id") String id) {
+    public ResponseEntity<String> deleteArticle(
+            @ApiParam(value = "Article Id", required = true) @PathVariable("id") String id) {
         Article article = this.articleService.getArticle(id);
         if (article == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

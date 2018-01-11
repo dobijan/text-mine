@@ -1,6 +1,7 @@
 package hu.bme.mit.textmine.solr.dal.inflection;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -58,10 +59,11 @@ public class SolrInflectionRepositoryImpl implements CustomSolrInflectionReposit
 
     @Override
     public List<String> findInText(String text) {
-        String[] tokens = text.split("\\s+");
+        List<String> tokens = Arrays.asList(text.split("\\s+")).stream().map(String::toLowerCase).distinct()
+                .collect(Collectors.toList());
         List<Criteria> criteria = Lists.newArrayList();
         for (String token : tokens) {
-            criteria.add(new Criteria("text").is(token));
+            criteria.add(new Criteria("name").is(token));
         }
         Criteria searchCriteria = null;
         for (Criteria c : criteria) {

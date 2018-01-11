@@ -1,0 +1,14 @@
+img {
+  height: 50px;
+  float: left;
+  margin-right: 30px;
+}
+
+mat-toolbar {
+  z-index: 10;
+}
+
+.mat-toolbar a {
+  margin-left: 10px;
+  margin-right: 10px;
+}

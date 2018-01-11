@@ -43,7 +43,11 @@ import hu.bme.mit.textmine.mongo.document.model.QueryHits;
 import hu.bme.mit.textmine.mongo.document.model.Section;
 import hu.bme.mit.textmine.mongo.document.service.DocumentService;
 import hu.bme.mit.textmine.solr.model.PartOfSpeechStatistics;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
+@Api(value = "/documents")
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE, path = "/documents")
 public class DocumentController {
@@ -58,25 +62,60 @@ public class DocumentController {
     @Autowired
     private ArticleService articleService;
 
+    private static final class LineHits extends QueryHits<Line> {
+    }
+
+    private static final class SectionHits extends QueryHits<Section> {
+    }
+
+    private static abstract class PosShingleEntry implements Entry<String, Integer> {
+    }
+
+    @ApiOperation(
+            value = "Get filtered documents",
+            httpMethod = "GET",
+            response = Document.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Document>> getFiltered(
-            @RequestParam(required = false) String entryText,
-            @RequestParam(required = false, name = "partOfSpeech") List<String> partsOfSpeech,
-            @RequestParam(required = false, name = "entryWord") List<String> entryWords,
-            @RequestParam(required = false, name = "documentId") List<String> documentIds,
-            @RequestParam(required = false, defaultValue = "0") Integer offset,
-            @RequestParam(required = false, defaultValue = "100") Integer limit) {
+            @ApiParam(value = "Entry text", required = false, name = "entryText") @RequestParam(
+                    name = "entryText",
+                    required = false) String entryText,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    required = false,
+                    name = "pos") List<String> partsOfSpeech,
+            @ApiParam(value = "Entry words", required = false, allowMultiple = true, name = "entryWord") @RequestParam(
+                    required = false,
+                    name = "entryWord") List<String> entryWords,
+            @ApiParam(
+                    value = "Document ids",
+                    required = false,
+                    allowMultiple = true,
+                    name = "documentId") @RequestParam(required = false, name = "documentId") List<String> documentIds,
+            @ApiParam(value = "Offset", required = false, name = "offset") @RequestParam(
+                    name = "offset",
+                    required = false,
+                    defaultValue = "0") Integer offset,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    name = "limit",
+                    required = false,
+                    defaultValue = "100") Integer limit) {
         List<PartOfSpeech> poss = PartOfSpeech.of(partsOfSpeech);
-        List<Document> documents = this.service.getDocumentsWithParams(entryText, poss, entryWords, documentIds, offset,
-                limit);
+        List<Document> documents = this.service.getDocumentsWithParams(entryText,
+                poss == null || poss.size() == 0 ? null : poss, entryWords, documentIds, offset, limit);
         if (documents == null || documents.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(documents, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get document by Id",
+            httpMethod = "GET",
+            response = Document.class)
     @RequestMapping(method = RequestMethod.GET, path = "/{id}")
-    public ResponseEntity<Document> getOne(@PathVariable("id") String id) {
+    public ResponseEntity<Document> getOne(
+            @ApiParam(value = "Document Id", required = true) @PathVariable("id") String id) {
         Document document = this.service.getDocument(id);
         if (document == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -84,8 +123,14 @@ public class DocumentController {
         return new ResponseEntity<>(document, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get document by corpus id",
+            httpMethod = "GET",
+            response = Document.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/by-corpus/{id}")
-    public ResponseEntity<List<Document>> getByCorpus(@PathVariable("id") String id) {
+    public ResponseEntity<List<Document>> getByCorpus(
+            @ApiParam(value = "Corpus Id", required = true) @PathVariable("id") String id) {
         List<Document> documents = this.service.getDocumentsByCorpus(id);
         if (documents == null || documents.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -93,13 +138,29 @@ public class DocumentController {
         return new ResponseEntity<>(documents, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get filtered sections",
+            httpMethod = "GET",
+            response = SectionHits.class)
     @RequestMapping(method = RequestMethod.GET, path = "/sections/{id}")
     public ResponseEntity<QueryHits<Section>> getFilteredSections(
-            @PathVariable("id") String id,
-            @RequestParam(required = false, value = "phrase") String[] phrases,
-            @RequestParam(required = false, value = "pos") String[] partsOfSpeech,
-            @RequestParam(required = false, value = "slop", defaultValue = "0") Integer slop,
-            @RequestParam(required = false, value = "disjoint", defaultValue = "true") Boolean disjoint) {
+            @ApiParam(value = "Document Id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Phrases", required = false, allowMultiple = true, name = "phrase") @RequestParam(
+                    required = false,
+                    name = "phrase") String[] phrases,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    required = false,
+                    name = "pos") String[] partsOfSpeech,
+            @ApiParam(value = "Sloppy distance", required = false, name = "slop") @RequestParam(
+                    name = "slop",
+                    required = false,
+                    value = "slop",
+                    defaultValue = "0") Integer slop,
+            @ApiParam(value = "Collections are ALL or ANY?", required = false, name = "disjoint") @RequestParam(
+                    name = "disjoint",
+                    required = false,
+                    value = "disjoint",
+                    defaultValue = "true") Boolean disjoint) {
         List<String> phrasesList = phrases == null ? Lists.newArrayList() : Arrays.asList(phrases);
         List<PartOfSpeech> poss = partsOfSpeech == null ? Lists.newArrayList()
                 : PartOfSpeech.of(Arrays.asList(partsOfSpeech));
@@ -111,13 +172,29 @@ public class DocumentController {
         return new ResponseEntity<>(hits, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get filtered sections",
+            httpMethod = "GET",
+            response = SectionHits.class)
     @RequestMapping(method = RequestMethod.GET, path = "/pages/{id}")
     public ResponseEntity<QueryHits<Section>> getFilteredPages(
-            @PathVariable("id") String id,
-            @RequestParam(required = false, value = "phrase") String[] phrases,
-            @RequestParam(required = false, value = "pos") String[] partsOfSpeech,
-            @RequestParam(required = false, value = "slop", defaultValue = "0") Integer slop,
-            @RequestParam(required = false, value = "disjoint", defaultValue = "true") Boolean disjoint) {
+            @ApiParam(value = "Document Id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Phrases", required = false, allowMultiple = true, name = "phrase") @RequestParam(
+                    required = false,
+                    name = "phrase") String[] phrases,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    required = false,
+                    name = "pos") String[] partsOfSpeech,
+            @ApiParam(value = "Sloppy distance", required = false, name = "slop") @RequestParam(
+                    name = "slop",
+                    required = false,
+                    value = "slop",
+                    defaultValue = "0") Integer slop,
+            @ApiParam(value = "Collections are ALL or ANY?", required = false, name = "disjoint") @RequestParam(
+                    name = "disjoint",
+                    required = false,
+                    value = "disjoint",
+                    defaultValue = "true") Boolean disjoint) {
         List<String> phrasesList = phrases == null ? Lists.newArrayList() : Arrays.asList(phrases);
         List<PartOfSpeech> poss = partsOfSpeech == null ? Lists.newArrayList()
                 : PartOfSpeech.of(Arrays.asList(partsOfSpeech));
@@ -129,11 +206,17 @@ public class DocumentController {
         return new ResponseEntity<>(hits, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get filtered lines of section",
+            httpMethod = "GET",
+            response = LineHits.class)
     @RequestMapping(method = RequestMethod.GET, path = "/sections/{id}/lines/{serial}")
     public ResponseEntity<QueryHits<Line>> getFilteredLines(
-            @PathVariable("id") String id,
-            @PathVariable("serial") Integer serial,
-            @RequestParam(required = false, value = "phrase") String[] phrases) {
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Section number", required = true) @PathVariable("serial") Integer serial,
+            @ApiParam(value = "Phrases", required = false, allowMultiple = true, name = "phrase") @RequestParam(
+                    required = false,
+                    name = "phrase") String[] phrases) {
         List<String> phrasesList = Arrays.asList(phrases);
         QueryHits<Line> hits = this.service.lineRegexQuery(id, serial, "(" + String.join("|", phrases) + ")",
                 phrasesList, false);
@@ -143,8 +226,14 @@ public class DocumentController {
         return new ResponseEntity<>(hits, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get PartOfSpeech statistics",
+            httpMethod = "GET",
+            response = PartOfSpeechStatistics.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/pos/stats/{id}")
-    public ResponseEntity<List<PartOfSpeechStatistics>> getPosStats(@PathVariable("id") String id) {
+    public ResponseEntity<List<PartOfSpeechStatistics>> getPosStats(
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         List<PartOfSpeechStatistics> stats = this.service.getPOSStatsByDocument(Lists.newArrayList(id));
         if (stats.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -152,10 +241,19 @@ public class DocumentController {
         return new ResponseEntity<>(stats, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get PartOfSpeech shingle statistics",
+            httpMethod = "GET",
+            response = PosShingleEntry.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/pos/shingle/stats")
     public ResponseEntity<List<Entry<String, Integer>>> getPosShingleStats(
-            @RequestParam(value = "pos") String[] partsOfSpeech,
-            @RequestParam(required = false, value = "limit", defaultValue = "1000") Integer limit) {
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    name = "pos") String[] partsOfSpeech,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    required = false,
+                    name = "limit",
+                    defaultValue = "1000") Integer limit) {
         List<PartOfSpeech> poss = partsOfSpeech == null ? Lists.newArrayList()
                 : PartOfSpeech.of(Arrays.asList(partsOfSpeech));
         Map<String, Integer> entries = this.service.getMostFrequentPosShingles(poss, limit);
@@ -167,9 +265,17 @@ public class DocumentController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get shingle statistics",
+            httpMethod = "GET",
+            response = PosShingleEntry.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/shingle/stats")
     public ResponseEntity<List<Entry<String, Integer>>> getShingleStats(
-            @RequestParam(required = false, value = "limit", defaultValue = "1000") Integer limit) {
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    required = false,
+                    name = "limit",
+                    defaultValue = "1000") Integer limit) {
         Map<String, Integer> entries = this.service.getMostFrequentShingles(limit);
         if (entries.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -179,10 +285,18 @@ public class DocumentController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get section shingle statistics",
+            httpMethod = "GET",
+            response = PosShingleEntry.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/sections/{id}/shingle/stats")
     public ResponseEntity<List<Map.Entry<String, Integer>>> getSectionShingleStats(
-            @PathVariable("id") String id,
-            @RequestParam(required = false, value = "limit", defaultValue = "1000") Integer limit) {
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    required = false,
+                    name = "limit",
+                    defaultValue = "1000") Integer limit) {
         Map<String, Integer> entries = this.service.getMostFrequentShinglesOfSections(id, limit);
         if (entries.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -192,10 +306,18 @@ public class DocumentController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get page shingle statistics",
+            httpMethod = "GET",
+            response = PosShingleEntry.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/pages/{id}/shingle/stats")
     public ResponseEntity<List<Map.Entry<String, Integer>>> getPageShingleStats(
-            @PathVariable("id") String id,
-            @RequestParam(required = false, value = "limit", defaultValue = "1000") Integer limit) {
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    required = false,
+                    name = "limit",
+                    defaultValue = "1000") Integer limit) {
         Map<String, Integer> entries = this.service.getMostFrequentShinglesOfPages(id, limit);
         if (entries.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -205,11 +327,20 @@ public class DocumentController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get section PartOfSpeech shingle statistics",
+            httpMethod = "GET",
+            response = PosShingleEntry.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/sections/{id}/pos/shingle/stats")
     public ResponseEntity<List<Map.Entry<String, Integer>>> getSectionPosShingleStats(
-            @PathVariable("id") String id,
-            @RequestParam(value = "pos") String[] partsOfSpeech,
-            @RequestParam(required = false, value = "limit", defaultValue = "1000") Integer limit) {
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    name = "pos") String[] partsOfSpeech,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    required = false,
+                    name = "limit",
+                    defaultValue = "1000") Integer limit) {
         List<PartOfSpeech> poss = partsOfSpeech == null ? Lists.newArrayList()
                 : PartOfSpeech.of(Arrays.asList(partsOfSpeech));
         Map<String, Integer> entries = this.service.getMostFrequentPosShinglesOfSections(id, poss, limit);
@@ -221,11 +352,20 @@ public class DocumentController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get page PartOfSpeech shingle statistics",
+            httpMethod = "GET",
+            response = PosShingleEntry.class,
+            responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, path = "/pages/{id}/pos/shingle/stats")
     public ResponseEntity<List<Map.Entry<String, Integer>>> getPagePosShingleStats(
-            @PathVariable("id") String id,
-            @RequestParam(value = "pos") String[] partsOfSpeech,
-            @RequestParam(required = false, value = "limit", defaultValue = "1000") Integer limit) {
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Parts of speech", required = false, allowMultiple = true, name = "pos") @RequestParam(
+                    name = "pos") String[] partsOfSpeech,
+            @ApiParam(value = "Limit", required = false, name = "limit") @RequestParam(
+                    required = false,
+                    name = "limit",
+                    defaultValue = "1000") Integer limit) {
         List<PartOfSpeech> poss = partsOfSpeech == null ? Lists.newArrayList()
                 : PartOfSpeech.of(Arrays.asList(partsOfSpeech));
         Map<String, Integer> entries = this.service.getMostFrequentPosShinglesOfPages(id, poss, limit);
@@ -237,8 +377,13 @@ public class DocumentController {
                 HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get page PartOfSpeech shingle statistics",
+            httpMethod = "POST",
+            response = Document.class)
     @RequestMapping(method = RequestMethod.POST, path = "/reindex/{id}")
-    public ResponseEntity<Document> reindex(@PathVariable("id") String id) {
+    public ResponseEntity<Document> reindex(
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         Document document = this.service.getDocument(id);
         this.service.reindexDocument(id);
         if (document == null) {
@@ -283,11 +428,18 @@ public class DocumentController {
                 AttachmentDTO.builder().content(file).metadata(metadata).build()));
     }
 
+    @ApiOperation(
+            value = "Get attachment by id",
+            httpMethod = "GET",
+            response = byte[].class,
+            produces = "application/octet-stream")
     @RequestMapping(
             method = RequestMethod.GET,
             path = "/attachment/{attachmentId}",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> getFile(@PathVariable("attachmentId") String attachmentId) throws IOException {
+    public ResponseEntity<byte[]> getFile(
+            @ApiParam(value = "Attachment id", required = true) @PathVariable("attachmentId") String attachmentId)
+            throws IOException {
 
         GridFsResource file = this.service.getDocumentAttachment(attachmentId);
         if (file == null) {
@@ -303,14 +455,24 @@ public class DocumentController {
         return ResponseEntity.status(HttpStatus.OK).headers(responseHeaders).body(content);
     }
 
+    @ApiOperation(
+            value = "Delete document by id",
+            httpMethod = "DELETE",
+            response = String.class)
     @RequestMapping(method = RequestMethod.DELETE, path = "/{id}/attachments")
-    public ResponseEntity<String> deleteAttachments(@PathVariable("id") String id) {
+    public ResponseEntity<String> deleteAttachments(
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         this.service.deleteDocumentAttachments(id);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    @ApiOperation(
+            value = "Normalize document by id",
+            httpMethod = "POST",
+            response = String.class)
     @RequestMapping(method = RequestMethod.POST, path = "/{id}/normalize", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> normalize(@PathVariable("id") String id) {
+    public ResponseEntity<String> normalize(
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         Document doc = this.service.getDocument(id);
         doc = this.service.normalizeDocument(doc, this.articleService.getArticlesByDocument(id));
         if (doc == null) {
@@ -319,8 +481,14 @@ public class DocumentController {
         return new ResponseEntity<>(doc.getNormalized(), HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Update document by id",
+            httpMethod = "PUT",
+            response = Document.class)
     @RequestMapping(method = RequestMethod.PUT, path = "/{id}")
-    public ResponseEntity<Document> put(@RequestBody Document document, @PathVariable("id") String id) {
+    public ResponseEntity<Document> put(
+            @ApiParam(value = "Document", required = true) @RequestBody Document document,
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         Document oldDocument = this.service.getDocument(id);
         if (oldDocument == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -329,8 +497,13 @@ public class DocumentController {
         return new ResponseEntity<>(newDocument, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Delete document by id",
+            httpMethod = "DELETE",
+            response = String.class)
     @RequestMapping(method = RequestMethod.DELETE, path = "/{id}")
-    public ResponseEntity<String> delete(@PathVariable("id") String id) {
+    public ResponseEntity<String> delete(
+            @ApiParam(value = "Document id", required = true) @PathVariable("id") String id) {
         Document document = this.service.getDocument(id);
         if (document == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

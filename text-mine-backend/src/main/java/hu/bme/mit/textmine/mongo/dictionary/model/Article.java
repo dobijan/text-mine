@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.index.TextIndexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 
@@ -18,7 +17,6 @@ import com.google.common.hash.Hashing;
 import com.querydsl.core.annotations.QueryEntity;
 
 import hu.bme.mit.textmine.mongo.core.BaseMongoEntity;
-import hu.bme.mit.textmine.mongo.document.model.Document;
 import hu.bme.mit.textmine.rdf.service.TextMineVocabularyService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,9 +42,10 @@ public class Article extends BaseMongoEntity {
 
     private static final long serialVersionUID = -383674994159227800L;
 
-    @DBRef(lazy = true)
+    // @DBRef(lazy = true)
     @NotNull(message = "Article must be linked to a document!")
-    private Document document;
+    // private Document document;
+    private String documentId;
 
     @Indexed
     @TextIndexed(weight = 10)
@@ -89,7 +88,7 @@ public class Article extends BaseMongoEntity {
     @Override
     public String getHash() {
         return Hashing.sha256()
-                .hashString(String.join(";", this.document.getAuthor(), this.document.getTitle(), this.entryWord),
+                .hashString(String.join(";", this.documentId, this.entryWord),
                         StandardCharsets.UTF_8)
                 .toString();
     }
